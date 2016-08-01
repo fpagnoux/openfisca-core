@@ -60,7 +60,7 @@ class Familles(AbstractEntity):
 
 
 class Individus(AbstractEntity):
-    is_persons_entity = True
+    is_person = True
     key_plural = 'individus'
     key_singular = 'individu'
     label = u'Personne'

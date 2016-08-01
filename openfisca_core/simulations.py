@@ -13,10 +13,7 @@ class Simulation(object):
     compact_legislation_by_instant_cache = None
     debug = False
     debug_all = False  # When False, log only formula calls with non-default parameters.
-    entity_by_key_plural = None
-    entity_by_key_singular = None
     period = None
-    persons = None
     reference_compact_legislation_by_instant_cache = None
     stack_trace = None
     steps_count = 1
@@ -54,19 +51,10 @@ class Simulation(object):
         self.compact_legislation_by_instant_cache = {}
         self.reference_compact_legislation_by_instant_cache = {}
 
-        entity_class_by_key_plural = tax_benefit_system.entity_class_by_key_plural
-        self.entity_by_key_plural = entity_by_key_plural = dict(
-            (key_plural, entity_class(simulation = self))
-            for key_plural, entity_class in entity_class_by_key_plural.iteritems()
+        self.entity_count = dict(
+            (entity.key, {"step_size": 0, "count": 0})
+            for entity in self.tax_benefit_system.entities
             )
-        self.entity_by_key_singular = dict(
-            (entity.key_singular, entity)
-            for entity in entity_by_key_plural.itervalues()
-            )
-        for entity in entity_by_key_plural.itervalues():
-            if entity.is_persons_entity:
-                self.persons = entity
-                break
 
     def calculate(self, column_name, period = None, **parameters):
         if period is None:
@@ -103,7 +91,7 @@ class Simulation(object):
         new_dict = new.__dict__
 
         for key, value in self.__dict__.iteritems():
-            if key not in ('debug', 'debug_all', 'entity_by_key_plural', 'persons', 'trace'):
+            if key not in ('debug', 'debug_all', 'trace'):
                 new_dict[key] = value
 
         if debug:
@@ -116,23 +104,10 @@ class Simulation(object):
             new_dict['stack_trace'] = collections.deque()
             new_dict['traceback'] = collections.OrderedDict()
 
-        new_dict['entity_by_key_plural'] = entity_by_key_plural = dict(
-            (key_plural, entity.clone(simulation = new))
-            for key_plural, entity in self.entity_by_key_plural.iteritems()
-            )
-        new_dict['entity_by_key_singular'] = dict(
-            (entity.key_singular, entity)
-            for entity in entity_by_key_plural.itervalues()
-            )
         new_dict['holder_by_name'] = {
             name: holder.clone()
             for name, holder in self.holder_by_name.iteritems()
             }
-        for entity in entity_by_key_plural.itervalues():
-            if entity.is_persons_entity:
-                new_dict['persons'] = entity
-                break
-
         return new
 
     def compute(self, column_name, period = None, **parameters):
@@ -235,8 +210,10 @@ class Simulation(object):
         holder = self.holder_by_name.get(column_name)
         if holder is None:
             column = self.tax_benefit_system.get_column(column_name, check_existence = True)
-            entity = self.get_variable_entity(column_name)
-            self.holder_by_name[column_name] = holder = holders.Holder(column = column, entity = entity)
+            self.holder_by_name[column_name] = holder = holders.Holder(
+                self,
+                column = column,
+                )
             if column.formula_class is not None:
                 holder.formula = column.formula_class(holder = holder)
         return holder
@@ -311,7 +288,7 @@ class Simulation(object):
         holder = self.get_holder(variable_name)
         return u'{}@{}<{}>{}'.format(
             variable_name,
-            holder.entity.key_plural,
+            holder.entity.key,
             str(period),
             stringify_array(holder.get_array(period)),
             )
@@ -331,4 +308,26 @@ class Simulation(object):
 
     def get_variable_entity(self, variable_name):
         column = self.tax_benefit_system.get_column(variable_name, check_existence = True)
-        return self.entity_by_key_plural[column.entity_key_plural]
+        return column.entity_class
+
+    def set_entity_count(self, entity, count):
+        self.entity_count[entity.key]['count'] = count
+
+    def set_entity_step_size(self, entity, step_size):
+        self.entity_count[entity.key]['step_size'] = step_size
+
+    def get_entity_step_size(self, entity):
+        return self.entity_count[entity.key]['step_size']
+
+    def get_entity_count(self, entity):
+        return self.entity_count[entity.key]['count']
+
+    def get_entity_index_array(self, entity):
+        tbs = self.tax_benefit_system
+        index_column_name = tbs.get_entity_index_column_name(entity)
+        return self.holder_by_name[index_column_name].array
+
+    def get_entity_role_array(self, entity):
+        tbs = self.tax_benefit_system
+        role_column_name = tbs.get_entity_role_column_name(entity)
+        return self.holder_by_name[role_column_name].array

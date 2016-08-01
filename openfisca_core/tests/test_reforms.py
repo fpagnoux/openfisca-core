@@ -223,7 +223,7 @@ def test_add_variable_with_reference():
     revenu_disponible_reference = tax_benefit_system.get_column('revenu_disponible')
 
     assert revenu_disponible_reform is not None
-    assert revenu_disponible_reform.entity_class.key_plural == revenu_disponible_reference.entity_class.key_plural
+    assert revenu_disponible_reform.entity_class == revenu_disponible_reference.entity_class
     assert revenu_disponible_reform.name == revenu_disponible_reference.name
     assert revenu_disponible_reform.label == revenu_disponible_reference.label
 

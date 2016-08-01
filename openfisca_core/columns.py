@@ -26,8 +26,6 @@ class Column(object):
     default = 0
     dtype = float
     end = None
-    entity = None  # Obsolete: To remove once build_..._couple() functions are no more used.
-    entity_key_plural = None
     entity_class = None
     formula_class = None
     is_period_size_independent = False  # When True, value of column doesn't depend from size of period (example: age)
@@ -50,7 +48,7 @@ class Column(object):
             self.default = default
         if end is not None:
             self.end = end
-        self.entity = entity or 'ind'
+        # self.entity = entity or 'ind'
         if function is not None:
             self.function = function
         if is_permanent:
@@ -143,7 +141,7 @@ class Column(object):
                 end = end.isoformat()
             self_json['end'] = end
         if self.entity is not None:
-            self_json['entity'] = self.entity_key_plural
+            self_json['entity'] = self.entity_class.key
         if self.label is not None:
             self_json['label'] = self.label
         line_number = self.formula_class.line_number

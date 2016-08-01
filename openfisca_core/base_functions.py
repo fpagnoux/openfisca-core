@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
-import numpy as np
-
 from . import periods
 
 
@@ -10,9 +7,7 @@ def permanent_default_value(formula, simulation, period, *extra_params):
     if formula.function is not None:
         return formula.function(simulation, period, *extra_params)
     holder = formula.holder
-    column = holder.column
-    array = np.empty(holder.entity.count, dtype = column.dtype)
-    array.fill(column.default)
+    array = holder.default_array()
     return period, array
 
 
@@ -50,8 +45,7 @@ def requested_period_added_value(formula, simulation, period, *extra_params):
                 return period, array
     if formula.function is not None:
         return formula.function(simulation, period, *extra_params)
-    array = np.empty(holder.entity.count, dtype = column.dtype)
-    array.fill(column.default)
+    array = holder.default_array()
     return period, array
 
 
@@ -59,17 +53,13 @@ def requested_period_default_value(formula, simulation, period, *extra_params):
     if formula.function is not None:
         return formula.function(simulation, period, *extra_params)
     holder = formula.holder
-    column = holder.column
-    array = np.empty(holder.entity.count, dtype = column.dtype)
-    array.fill(column.default)
+    array = holder.default_array()
     return period, array
 
 
 def requested_period_default_value_neutralized(formula, simulation, period, *extra_params):
     holder = formula.holder
-    column = holder.column
-    array = np.empty(holder.entity.count, dtype = column.dtype)
-    array.fill(column.default)
+    array = holder.default_array()
     return period, array
 
 
@@ -88,9 +78,7 @@ def requested_period_last_value(formula, simulation, period, *extra_params, **kw
             return period, last_array
     if formula.function is not None:
         return formula.function(simulation, period, *extra_params)
-    column = holder.column
-    array = np.empty(holder.entity.count, dtype = column.dtype)
-    array.fill(column.default)
+    array = holder.default_array()
     return period, array
 
 
@@ -110,7 +98,5 @@ def last_duration_last_value(formula, simulation, period, *extra_params):
                 return periods.Period((last_period[0], period.start, last_period[2])), last_array
     if formula.function is not None:
         return formula.function(simulation, period, *extra_params)
-    column = holder.column
-    array = np.empty(holder.entity.count, dtype = column.dtype)
-    array.fill(column.default)
+    array = holder.default_array()
     return period, array

@@ -48,12 +48,21 @@ class TaxBenefitSystem(object):
         self.legislation_xml_info_list = []
         self._legislation_json = legislation_json
 
+        self.build_entities(entities)
         if entities is None or len(entities) == 0:
             raise Exception("A tax benefit sytem must have at least an entity.")
         self.entity_class_by_key_plural = {
             entity_class.key_plural: entity_class
             for entity_class in entities
             }
+
+
+    def build_entities(self, entities):
+        # First implem: we assume the first entity is the person one
+        # Later: Find which one is the person one
+
+        person_entity = entities[0]
+        other_entities = entities[1:]
 
     @property
     def base_tax_benefit_system(self):
@@ -113,7 +122,7 @@ class TaxBenefitSystem(object):
         existing_column = self.get_column(name)
 
         if existing_column and not update:
-            # Variables that are dependencies of others (trough a conversion column)can be loaded automatically
+            # Variables that are dependencies of others (trough a conversion column) can be loaded automatically
             if name in self.automatically_loaded_variable:
                 self.automatically_loaded_variable.remove(name)
                 return self.get_column(name)

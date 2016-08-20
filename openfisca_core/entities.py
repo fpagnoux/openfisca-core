@@ -14,6 +14,10 @@ class Entity(object):
         role_index = 0
         for role in self.roles:
             individus = member[role]
-            for individu in individus:
-                yield role_index, individu
+            if individus is not None:
+                if type(individus) == str:
+                    individus = [individus]
+
+                for individu in individus:
+                    yield role_index, individu
             role_index += 1

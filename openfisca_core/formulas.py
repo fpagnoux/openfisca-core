@@ -394,13 +394,13 @@ class SimpleFormula(AbstractFormula):
     def any_by_roles(self, array_or_dated_holder, entity = None, roles = None):
         holder = self.holder
         simulation = holder.simulation
-        persons = simulation.persons
-        index_for_person_variable_name = simulation.tax_benefit_system.get_entity_index_column_name(entity)
+        persons = simulation.tax_benefit_system.person_entity
         if entity is None:
             entity = holder.entity
         else:
-            assert entity in simulation.entity_by_key_singular, u"Unknown entity: {}".format(entity).encode('utf-8')
-            entity = simulation.entity_by_key_singular[entity]
+            assert entity in simulation.tax_benefit_system.entities, u"Unknown entity: {}".format(entity).encode('utf-8')
+        index_for_person_variable_name = simulation.tax_benefit_system.get_entity_index_column_name(entity)
+
         assert not entity.is_person
         if isinstance(array_or_dated_holder, (holders.DatedHolder, holders.Holder)):
             assert array_or_dated_holder.entity.is_person
@@ -412,14 +412,14 @@ class SimpleFormula(AbstractFormula):
             persons_count = simulation.get_entity_count(persons)
             assert array.size == persons_count, u"Expected an array of size {}. Got: {}".format(persons_count,
                 array.size)
-        entity_index_array = persons.simulation.holder_by_name[index_for_person_variable_name].array
+        entity_index_array = simulation.holder_by_name[index_for_person_variable_name].array
         if roles is None:
             roles = range(entity.roles_count)
         target_array = self.zeros(dtype = np.bool)
         for role in roles:
             # TODO Mettre les filtres en cache dans la simulation
             role_for_person_variable_name = holder.simulation.tax_benefit_system.get_entity_role_column_name(entity)
-            boolean_filter = persons.simulation.holder_by_name[role_for_person_variable_name].array == role
+            boolean_filter = simulation.holder_by_name[role_for_person_variable_name].array == role
             target_array[entity_index_array[boolean_filter]] += array[boolean_filter]
         return target_array
 
@@ -435,13 +435,13 @@ class SimpleFormula(AbstractFormula):
         """
         holder = self.holder
         simulation = holder.simulation
-        persons = simulation.persons
+        persons = simulation.tax_benefit_system.person_entity
         if isinstance(array_or_dated_holder, (holders.DatedHolder, holders.Holder)):
             if entity is None:
                 entity = array_or_dated_holder.entity
             else:
-                assert entity in simulation.entity_by_key_singular, u"Unknown entity: {}".format(entity).encode('utf-8')
-                entity = simulation.entity_by_key_singular[entity]
+                assert entity in simulation.tax_benefit_system.entities, u"Unknown entity: {}".format(entity).encode('utf-8')
+
                 assert entity == array_or_dated_holder.entity, \
                     u"""Holder entity "{}" and given entity "{}" don't match""".format(entity.key,
                         array_or_dated_holder.column.entity_class.key).encode('utf-8')
@@ -449,8 +449,8 @@ class SimpleFormula(AbstractFormula):
             if default is None:
                 default = array_or_dated_holder.column.default
         else:
-            assert entity in simulation.entity_by_key_singular, u"Unknown entity: {}".format(entity).encode('utf-8')
-            entity = simulation.entity_by_key_singular[entity]
+            assert entity in simulation.tax_benefit_system.entities, u"Unknown entity: {}".format(entity).encode('utf-8')
+
             array = array_or_dated_holder
             assert isinstance(array, np.ndarray), u"Expected a holder or a Numpy array. Got: {}".format(array).encode(
                 'utf-8')
@@ -464,12 +464,12 @@ class SimpleFormula(AbstractFormula):
         target_array = np.empty(persons_count, dtype = array.dtype)
         target_array.fill(default)
         index_for_person_variable_name = simulation.tax_benefit_system.get_entity_index_column_name(entity)
-        entity_index_array = persons.simulation.holder_by_name[index_for_person_variable_name].array
+        entity_index_array = simulation.holder_by_name[index_for_person_variable_name].array
         if roles is None:
             roles = range(entity.roles_count)
         for role in roles:
             role_for_person_variable_name = holder.simulation.tax_benefit_system.get_entity_role_column_name(entity)
-            boolean_filter = persons.simulation.holder_by_name[role_for_person_variable_name].array == role
+            boolean_filter = simulation.holder_by_name[role_for_person_variable_name].array == role
             try:
                 target_array[boolean_filter] = array[entity_index_array[boolean_filter]]
             except:
@@ -653,13 +653,13 @@ class SimpleFormula(AbstractFormula):
     def filter_role(self, array_or_dated_holder, default = None, entity = None, role = None):
         """Convert a persons array to an entity array, copying only cells of persons having the given role."""
         holder = self.holder
-        simulation = holder.holder.simulation
-        persons = simulation.persons
+        simulation = holder.simulation
+        persons = simulation.tax_benefit_system.person_entity
         if entity is None:
             entity = holder.entity
         else:
-            assert entity in simulation.entity_by_key_singular, u"Unknown entity: {}".format(entity).encode('utf-8')
-            entity = simulation.entity_by_key_singular[entity]
+            assert entity in simulation.tax_benefit_system.entities, u"Unknown entity: {}".format(entity).encode('utf-8')
+
         assert not entity.is_person
         if isinstance(array_or_dated_holder, (holders.DatedHolder, holders.Holder)):
             assert array_or_dated_holder.entity.is_person
@@ -676,13 +676,13 @@ class SimpleFormula(AbstractFormula):
             if default is None:
                 default = 0
         index_for_person_variable_name = simulation.tax_benefit_system.get_entity_index_column_name(entity)
-        entity_index_array = persons.simulation.holder_by_name[index_for_person_variable_name].array
+        entity_index_array = simulation.holder_by_name[index_for_person_variable_name].array
         assert isinstance(role, int)
         entity_count = simulation.get_entity_count(entity)
         target_array = np.empty(entity_count, dtype = array.dtype)
         target_array.fill(default)
         role_for_person_variable_name = holder.simulation.tax_benefit_system.get_entity_role_column_name(entity)
-        boolean_filter = persons.simulation.holder_by_name[role_for_person_variable_name].array == role
+        boolean_filter = simulation.holder_by_name[role_for_person_variable_name].array == role
         try:
             target_array[entity_index_array[boolean_filter]] = array[boolean_filter]
         except:
@@ -709,13 +709,13 @@ class SimpleFormula(AbstractFormula):
     def split_by_roles(self, array_or_dated_holder, default = None, entity = None, roles = None):
         """dispatch a persons array to several entity arrays (one for each role)."""
         holder = self.holder
-        simulation = holder.holder.simulation
-        persons = simulation.persons
+        simulation = holder.simulation
+        persons = simulation.tax_benefit_system.person_entity
         if entity is None:
             entity = holder.entity
         else:
-            assert entity in simulation.entity_by_key_singular, u"Unknown entity: {}".format(entity).encode('utf-8')
-            entity = simulation.entity_by_key_singular[entity]
+            assert entity in simulation.tax_benefit_system.entities, u"Unknown entity: {}".format(entity).encode('utf-8')
+
         assert not entity.is_person
         if isinstance(array_or_dated_holder, (holders.DatedHolder, holders.Holder)):
             assert array_or_dated_holder.entity.is_person
@@ -732,7 +732,7 @@ class SimpleFormula(AbstractFormula):
             if default is None:
                 default = 0
         index_for_person_variable_name = simulation.tax_benefit_system.get_entity_index_column_name(entity)
-        entity_index_array = persons.simulation.holder_by_name[index_for_person_variable_name].array
+        entity_index_array = simulation.holder_by_name[index_for_person_variable_name].array
         if roles is None:
             # To ensure that existing formulas don't fail, ensure there is always at least 11 roles.
             # roles = range(entity.roles_count)
@@ -754,13 +754,13 @@ class SimpleFormula(AbstractFormula):
 
     def sum_by_entity(self, array_or_dated_holder, entity = None, roles = None):
         holder = self.holder
-        simulation = holder.holder.simulation
-        persons = simulation.persons
+        simulation = holder.simulation
+        persons = simulation.tax_benefit_system.person_entity
         if entity is None:
             entity = holder.entity
         else:
-            assert entity in simulation.entity_by_key_singular, u"Unknown entity: {}".format(entity).encode('utf-8')
-            entity = simulation.entity_by_key_singular[entity]
+            assert entity in simulation.tax_benefit_system.entities, u"Unknown entity: {}".format(entity).encode('utf-8')
+
         assert not entity.is_person
         if isinstance(array_or_dated_holder, (holders.DatedHolder, holders.Holder)):
             assert array_or_dated_holder.entity.is_person
@@ -773,14 +773,14 @@ class SimpleFormula(AbstractFormula):
             assert array.size == persons_count, u"Expected an array of size {}. Got: {}".format(persons_count,
                 array.size)
         index_for_person_variable_name = simulation.tax_benefit_system.get_entity_index_column_name(entity)
-        entity_index_array = persons.simulation.holder_by_name[index_for_person_variable_name].array
+        entity_index_array = simulation.holder_by_name[index_for_person_variable_name].array
         if roles is None:
             roles = range(entity.roles_count)
         target_array = np.zeros(simulation.get_entity_count(entity), dtype = array.dtype if array.dtype != np.bool else np.int16)
         for role in roles:
             # TODO: Mettre les filtres en cache dans la simulation
             role_for_person_variable_name = holder.simulation.tax_benefit_system.get_entity_role_column_name(entity)
-            boolean_filter = persons.simulation.holder_by_name[role_for_person_variable_name].array == role
+            boolean_filter = simulation.holder_by_name[role_for_person_variable_name].array == role
             target_array[entity_index_array[boolean_filter]] += array[boolean_filter]
         return target_array
 

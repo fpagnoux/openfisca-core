@@ -274,7 +274,6 @@ class DatedFormula(AbstractGroupedFormula):
             return dated_holder
 
         holder = self.holder
-        column = holder.column
         array = holder.default_array()
         return holder.put_in_cache(array, period, parameters.get('extra_params'))
 
@@ -345,7 +344,6 @@ class PersonToEntity(AbstractEntityToEntity):
         When no roles are given, it means "all the roles".
         """
 
-
         holder = self.holder
         entity = holder.entity
         simulation = holder.simulation
@@ -375,12 +373,10 @@ class PersonToEntity(AbstractEntityToEntity):
             assert operation in ('add', 'or'), 'Invalid operation {} in formula {}'.format(operation,
                 holder.column.name)
             if roles is None:
-                roles = range(entity.roles_count) # FIXME
-            target_array = self.zeros(dtype =
-                np.bool if operation == 'or'
-                else array.dtype if array.dtype != np.bool
-                else np.int16
-                )
+                roles = range(entity.roles_count)  # FIXME
+            target_array = self.zeros(dtype = np.bool if operation == 'or'
+              else array.dtype if array.dtype != np.bool
+              else np.int16)
             for role in roles:
                 # TODO: Cache filters.
                 boolean_filter = simulation.get_entity_role_array(entity) == role
@@ -397,8 +393,7 @@ class SimpleFormula(AbstractFormula):
 
     def any_by_roles(self, array_or_dated_holder, entity = None, roles = None):
         holder = self.holder
-        target_entity = holder.entity
-        simulation = target_holder.simulation
+        simulation = holder.simulation
         persons = simulation.persons
         index_for_person_variable_name = simulation.tax_benefit_system.get_entity_index_column_name(entity)
         if entity is None:
@@ -439,8 +434,7 @@ class SimpleFormula(AbstractFormula):
         When no roles are given, it means "all the roles" => every cell is set.
         """
         holder = self.holder
-        target_entity = holder.entity
-        simulation = target_holder.simulation
+        simulation = holder.simulation
         persons = simulation.persons
         if isinstance(array_or_dated_holder, (holders.DatedHolder, holders.Holder)):
             if entity is None:
@@ -470,7 +464,7 @@ class SimpleFormula(AbstractFormula):
         target_array = np.empty(persons_count, dtype = array.dtype)
         target_array.fill(default)
         index_for_person_variable_name = simulation.tax_benefit_system.get_entity_index_column_name(entity)
-        entity_index_array = persons.simulation.holder_by_name[entity.index_for_person_variable_name].array
+        entity_index_array = persons.simulation.holder_by_name[index_for_person_variable_name].array
         if roles is None:
             roles = range(entity.roles_count)
         for role in roles:
@@ -701,7 +695,6 @@ class SimpleFormula(AbstractFormula):
         """Recursively build a graph of formulas."""
         holder = self.holder
         column = holder.column
-        entity = holder.entity
         simulation = holder.simulation
         variables_name, parameters_name = get_input_variables_and_parameters(column)
         if variables_name is not None:
@@ -810,7 +803,6 @@ class SimpleFormula(AbstractFormula):
         if get_input_variables_and_parameters is not None:
             holder = self.holder
             column = holder.column
-            entity = holder.entity
             simulation = holder.simulation
             variables_name, parameters_name = get_input_variables_and_parameters(column)
             if variables_name:

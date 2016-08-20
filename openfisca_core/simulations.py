@@ -57,7 +57,7 @@ class Simulation(object):
         #     (key_plural, entity_class(simulation = self))
         #     for key_plural, entity_class in entity_class_by_key_plural.iteritems()
         #     )
-        self.entity_count  = dict(
+        self.entity_count = dict(
             (entity.key, {"step_size": 0, "count": 0})
             for entity in self.tax_benefit_system.entities
             )
@@ -237,7 +237,6 @@ class Simulation(object):
         holder = self.holder_by_name.get(column_name)
         if holder is None:
             column = self.tax_benefit_system.get_column(column_name, check_existence = True)
-            entity = self.get_variable_entity(column_name)
             self.holder_by_name[column_name] = holder = holders.Holder(
                 self,
                 column = column,
@@ -359,4 +358,3 @@ class Simulation(object):
         tbs = self.tax_benefit_system
         role_column_name = tbs.get_entity_role_column_name(entity)
         return self.holder_by_name[role_column_name].array
-

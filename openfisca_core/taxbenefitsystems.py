@@ -60,7 +60,6 @@ class TaxBenefitSystem(object):
         #     for entity_class in entities
         #     }
 
-
     def build_entities(self, entities):
         # First implem: we assume the first entity is the person one
         # Later: Find which one is the person one
@@ -88,7 +87,6 @@ class TaxBenefitSystem(object):
 
             self.add_column(id_column)
             self.add_column(role_column)
-
 
     @property
     def base_tax_benefit_system(self):
@@ -269,6 +267,3 @@ class TaxBenefitSystem(object):
 
     def get_entity_role_column_name(self, entity):
         return u"role_in_{}".format(entity.key) if not entity.is_person else None
-
-
-

@@ -138,8 +138,6 @@ class AbstractScenario(object):
                         )
                     for member_index, member in enumerate(test_case[entity.key]):
                         for person_role, person_id in entity.iter_member_persons_role_and_id(member):
-
-
                             person_index = person_index_by_id[person_id]
                             for step_index in range(steps_count):
                                 person_entity_id_array[step_index * persons_step_size + person_index] = step_index * entity_step_size + member_index

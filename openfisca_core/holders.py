@@ -116,9 +116,8 @@ class Holder(object):
 
         The returned dated holder is always of the requested period and this method never returns None.
         """
-        entity = self.entity
         if period is None:
-            period = simulation.period
+            period = self.simulation.period
         column = self.column
         accept_other_period = parameters.get('accept_other_period', False)
 

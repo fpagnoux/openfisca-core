@@ -12,7 +12,9 @@ from setuptools import find_packages
 
 from . import conv, legislations, legislationsxml
 from variables import AbstractVariable
-from formulas import neutralize_column
+from formulas import neutralize_column, new_filled_column, SimpleFormula
+from columns import IntCol
+
 
 log = logging.getLogger(__name__)
 
@@ -48,21 +50,44 @@ class TaxBenefitSystem(object):
         self.legislation_xml_info_list = []
         self._legislation_json = legislation_json
 
+        self.entities = entities
         self.build_entities(entities)
         if entities is None or len(entities) == 0:
             raise Exception("A tax benefit sytem must have at least an entity.")
-        self.entity_class_by_key_plural = {
-            entity_class.key_plural: entity_class
-            for entity_class in entities
-            }
+        # self.entity_class_by_key_plural = {
+        #     entity_class.key_plural: entity_class
+        #     for entity_class in entities
+        #     }
 
 
     def build_entities(self, entities):
         # First implem: we assume the first entity is the person one
         # Later: Find which one is the person one
 
-        person_entity = entities[0]
+        self.person_entity = entities[0]
         other_entities = entities[1:]
+
+        for entity_class in other_entities:
+
+            id_column = new_filled_column(
+                name = u"id_{}".format(entity_class.key),
+                entity_class = self.person_entity,
+                column = IntCol,
+                is_permanent = True,
+                formula_class = SimpleFormula
+                )
+
+            role_column = new_filled_column(
+                name = u"role_in_{}".format(entity_class.key),
+                entity_class = self.person_entity,
+                column = IntCol,
+                is_permanent = True,
+                formula_class = SimpleFormula
+                )
+
+            self.add_column(id_column)
+            self.add_column(role_column)
+
 
     @property
     def base_tax_benefit_system(self):
@@ -136,7 +161,7 @@ class TaxBenefitSystem(object):
         variable = variable_type(name, attributes, variable_class)
         # We need the tax benefit system to identify columns mentioned by conversion variables.
         column = variable.to_column(self)
-        self.column_by_name[column.name] = column
+        self.add_column(column)
 
         return column
 
@@ -197,6 +222,9 @@ class TaxBenefitSystem(object):
         if path.isfile(param_file):
             self.add_legislation_params(param_file)
 
+    def add_column(self, column):
+        self.column_by_name[column.name] = column
+
     def get_column(self, column_name, check_existence = False):
         column = self.column_by_name.get(column_name)
         if not column and check_existence:
@@ -234,3 +262,12 @@ class TaxBenefitSystem(object):
         if self._legislation_json is None:
             self.compute_legislation()
         return self._legislation_json
+
+    def get_entity_index_column_name(self, entity):
+        return u"id_{}".format(entity.key)
+
+    def get_entity_role_column_name(self, entity):
+        return u"role_in_{}".format(entity.key)
+
+
+

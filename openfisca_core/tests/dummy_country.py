@@ -8,7 +8,7 @@ from os import path
 
 from openfisca_core import conv
 from openfisca_core.columns import IntCol
-from openfisca_core.entities import AbstractEntity
+from openfisca_core.entities import Entity
 from openfisca_core.variables import Variable
 from openfisca_core.scenarios import AbstractScenario, set_entities_json_id
 from openfisca_core.taxbenefitsystems import TaxBenefitSystem
@@ -19,9 +19,9 @@ TEST_DIRECTORY = path.dirname(path.abspath(__file__))
 
 # Entities
 
-
-class Familles(AbstractEntity):
-    label = u'Famille'
+Familles = Entity(
+    key = "familles",
+    label = u'Famille',
     roles = {
         'enfant': {
             'label': u'Enfants'
@@ -31,26 +31,14 @@ class Familles(AbstractEntity):
             'max': 2
         }
     }
+    )
 
-class Individus(AbstractEntity):
-    label = u'Personne'
+Individus = Entity(
+    key = "individus",
+    label = u'Individus',
     is_person = True
+    )
 
-# # Mandatory input variables
-
-
-# class id_famille(Variable):
-#     column = IntCol
-#     entity_class = Individus
-#     is_permanent = True
-#     label = u"Identifiant de la famille"
-
-
-# class role_dans_famille(Variable):
-#     column = IntCol
-#     entity_class = Individus
-#     is_permanent = True
-#     label = u"Rôle dans la famille"
 
 # Scenarios
 
@@ -228,7 +216,7 @@ class Scenario(AbstractScenario):
 
 # TaxBenefitSystems
 
-entities = [Familles, Individus]
+entities = [Individus, Familles]
 path_to_root_params = os.path.join(openfisca_core_dir, 'openfisca_core', 'tests', 'assets', 'param_root.xml')
 path_to_crds_params = os.path.join(openfisca_core_dir, 'openfisca_core', 'tests', 'assets', 'param_more.xml')
 

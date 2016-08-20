@@ -13,8 +13,6 @@ class Simulation(object):
     compact_legislation_by_instant_cache = None
     debug = False
     debug_all = False  # When False, log only formula calls with non-default parameters.
-    entity_by_key_plural = None
-    entity_by_key_singular = None
     period = None
     persons = None
     reference_compact_legislation_by_instant_cache = None
@@ -54,19 +52,23 @@ class Simulation(object):
         self.compact_legislation_by_instant_cache = {}
         self.reference_compact_legislation_by_instant_cache = {}
 
-        entity_class_by_key_plural = tax_benefit_system.entity_class_by_key_plural
-        self.entity_by_key_plural = entity_by_key_plural = dict(
-            (key_plural, entity_class(simulation = self))
-            for key_plural, entity_class in entity_class_by_key_plural.iteritems()
+        # entity_class_by_key_plural = tax_benefit_system.entity_class_by_key_plural
+        # self.entity_by_key_plural = entity_by_key_plural = dict(
+        #     (key_plural, entity_class(simulation = self))
+        #     for key_plural, entity_class in entity_class_by_key_plural.iteritems()
+        #     )
+        self.entity_count  = dict(
+            (entity.key, {"step_size": 0, "count": 0})
+            for entity in self.tax_benefit_system.entities
             )
-        self.entity_by_key_singular = dict(
-            (entity.key_singular, entity)
-            for entity in entity_by_key_plural.itervalues()
-            )
-        for entity in entity_by_key_plural.itervalues():
-            if entity.is_persons_entity:
-                self.persons = entity
-                break
+        # self.entity_by_key_singular = dict(
+        #     (entity.key_singular, entity)
+        #     for entity in entity_by_key_plural.itervalues()
+        #     )
+        # for entity in entity_by_key_plural.itervalues():
+        #     if entity.is_person:
+        #         self.persons = entity
+        #         break
 
     def calculate(self, column_name, period = None, **parameters):
         if period is None:
@@ -128,10 +130,10 @@ class Simulation(object):
             name: holder.clone()
             for name, holder in self.holder_by_name.iteritems()
             }
-        for entity in entity_by_key_plural.itervalues():
-            if entity.is_persons_entity:
-                new_dict['persons'] = entity
-                break
+        # for entity in entity_by_key_plural.itervalues():
+        #     if entity.is_person:
+        #         new_dict['persons'] = entity
+        #         break
 
         return new
 
@@ -236,7 +238,10 @@ class Simulation(object):
         if holder is None:
             column = self.tax_benefit_system.get_column(column_name, check_existence = True)
             entity = self.get_variable_entity(column_name)
-            self.holder_by_name[column_name] = holder = holders.Holder(column = column, entity = entity)
+            self.holder_by_name[column_name] = holder = holders.Holder(
+                self,
+                column = column,
+                )
             if column.formula_class is not None:
                 holder.formula = column.formula_class(holder = holder)
         return holder
@@ -331,4 +336,17 @@ class Simulation(object):
 
     def get_variable_entity(self, variable_name):
         column = self.tax_benefit_system.get_column(variable_name, check_existence = True)
-        return self.entity_by_key_plural[column.entity_key_plural]
+        return column.entity_class
+
+    def set_entity_count(self, entity, count):
+        self.entity_count[entity.key]['count'] = count
+
+    def set_entity_step_size(self, entity, step_size):
+        self.entity_count[entity.key]['step_size'] = step_size
+
+    def get_entity_step_size(self, entity):
+        return self.entity_count[entity.key]['step_size']
+
+    def get_entity_count(self, entity):
+        return self.entity_count[entity.key]['count']
+

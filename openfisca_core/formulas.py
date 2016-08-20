@@ -310,10 +310,10 @@ class EntityToPerson(AbstractEntityToEntity):
         """
         holder = self.holder
         persons = holder.entity
-        assert persons.is_persons_entity
+        assert persons.is_person
 
         entity = dated_holder.entity
-        assert not entity.is_persons_entity
+        assert not entity.is_person
         array = dated_holder.array
         target_array = np.empty(persons.count, dtype = array.dtype)
         target_array.fill(dated_holder.column.default)
@@ -341,10 +341,10 @@ class PersonToEntity(AbstractEntityToEntity):
         """
         holder = self.holder
         entity = holder.entity
-        assert not entity.is_persons_entity
+        assert not entity.is_person
 
         persons = dated_holder.entity
-        assert persons.is_persons_entity
+        assert persons.is_person
         array = dated_holder.array
 
         target_array = np.empty(entity.count, dtype = array.dtype)
@@ -392,9 +392,9 @@ class SimpleFormula(AbstractFormula):
         else:
             assert entity in simulation.entity_by_key_singular, u"Unknown entity: {}".format(entity).encode('utf-8')
             entity = simulation.entity_by_key_singular[entity]
-        assert not entity.is_persons_entity
+        assert not entity.is_person
         if isinstance(array_or_dated_holder, (holders.DatedHolder, holders.Holder)):
-            assert array_or_dated_holder.entity.is_persons_entity
+            assert array_or_dated_holder.entity.is_person
             array = array_or_dated_holder.array
         else:
             array = array_or_dated_holder
@@ -448,7 +448,7 @@ class SimpleFormula(AbstractFormula):
                 array.size)
             if default is None:
                 default = 0
-        assert not entity.is_persons_entity
+        assert not entity.is_person
         target_array = np.empty(persons.count, dtype = array.dtype)
         target_array.fill(default)
         entity_index_array = persons.simulation.holder_by_name[entity.index_for_person_variable_name].array
@@ -645,9 +645,9 @@ class SimpleFormula(AbstractFormula):
         else:
             assert entity in simulation.entity_by_key_singular, u"Unknown entity: {}".format(entity).encode('utf-8')
             entity = simulation.entity_by_key_singular[entity]
-        assert not entity.is_persons_entity
+        assert not entity.is_person
         if isinstance(array_or_dated_holder, (holders.DatedHolder, holders.Holder)):
-            assert array_or_dated_holder.entity.is_persons_entity
+            assert array_or_dated_holder.entity.is_person
             array = array_or_dated_holder.array
             if default is None:
                 default = array_or_dated_holder.column.default
@@ -698,9 +698,9 @@ class SimpleFormula(AbstractFormula):
         else:
             assert entity in simulation.entity_by_key_singular, u"Unknown entity: {}".format(entity).encode('utf-8')
             entity = simulation.entity_by_key_singular[entity]
-        assert not entity.is_persons_entity
+        assert not entity.is_person
         if isinstance(array_or_dated_holder, (holders.DatedHolder, holders.Holder)):
-            assert array_or_dated_holder.entity.is_persons_entity
+            assert array_or_dated_holder.entity.is_person
             array = array_or_dated_holder.array
             if default is None:
                 default = array_or_dated_holder.column.default
@@ -739,9 +739,9 @@ class SimpleFormula(AbstractFormula):
         else:
             assert entity in simulation.entity_by_key_singular, u"Unknown entity: {}".format(entity).encode('utf-8')
             entity = simulation.entity_by_key_singular[entity]
-        assert not entity.is_persons_entity
+        assert not entity.is_person
         if isinstance(array_or_dated_holder, (holders.DatedHolder, holders.Holder)):
-            assert array_or_dated_holder.entity.is_persons_entity
+            assert array_or_dated_holder.entity.is_person
             array = array_or_dated_holder.array
         else:
             array = array_or_dated_holder
@@ -885,11 +885,7 @@ def new_filled_column(base_function = UnboundLocalError, calculate_output = Unbo
     if entity_class is UnboundLocalError:
         assert reference_column is not None, \
             """Missing attribute "entity_class" in definition of filled column {}""".format(name)
-        entity_class_key_plural = reference_column.entity_key_plural
-        entity_class_symbol = reference_column.entity
-    else:
-        entity_class_key_plural = entity_class.key_plural
-        entity_class_symbol = entity_class.symbol
+        entity_class = reference_column.entity_class
 
     assert formula_class is not None, """Missing attribute "formula_class" in definition of filled column {}""".format(
         name)
@@ -1072,8 +1068,6 @@ def new_filled_column(base_function = UnboundLocalError, calculate_output = Unbo
         column.cerfa_field = cerfa_field
     if stop_date is not None:
         column.end = stop_date
-    column.entity = entity_class_symbol  # Obsolete: To remove once build_..._couple() functions are no more used.
-    column.entity_key_plural = entity_class_key_plural
     column.entity_class = entity_class
     column.formula_class = formula_class
     if is_permanent:

@@ -153,12 +153,12 @@ class AbstractConversionVariable(AbstractVariable):
         formula_class_attributes['variable_name'] = reference_column.name
 
         if issubclass(formula_class, EntityToPerson):
-            assert entity_class.is_persons_entity
+            assert entity_class.is_person
             column = reference_column.empty_clone()
         else:
             assert issubclass(formula_class, PersonToEntity)
 
-            assert not entity_class.is_persons_entity
+            assert not entity_class.is_person
 
             if roles is None or len(roles) > 1:
                 operation = self.attributes.pop('operation')
@@ -187,8 +187,6 @@ class AbstractConversionVariable(AbstractVariable):
             column.cerfa_field = cerfa_field
         if reference_column.end is not None:
             column.end = reference_column.end
-        column.entity = entity_class.symbol  # Obsolete: To remove once build_..._couple() functions are no more used.
-        column.entity_key_plural = entity_class.key_plural
         column.entity_class = entity_class
         column.formula_class = formula_class
         if reference_column.is_permanent:

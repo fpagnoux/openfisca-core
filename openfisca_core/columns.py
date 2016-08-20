@@ -26,8 +26,6 @@ class Column(object):
     default = 0
     dtype = float
     end = None
-    entity = None  # Obsolete: To remove once build_..._couple() functions are no more used.
-    entity_key_plural = None
     entity_class = None
     formula_class = None
     is_period_size_independent = False  # When True, value of column doesn't depend from size of period (example: age)

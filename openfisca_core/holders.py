@@ -57,29 +57,27 @@ class Holder(object):
     formula = None
     formula_output_period_by_requested_period = None
 
-    def __init__(self, column = None, entity = None):
+    def __init__(self, simulation, column = None):
         assert column is not None
         assert self.column is None
         self.column = column
-        assert entity is not None
-        self.entity = entity
+        self.simulation = simulation
 
     @property
     def array(self):
         if not self.column.is_permanent:
-            return self.get_array(self.entity.simulation.period)
+            return self.get_array(self.simulation.period)
         return self._array
 
     @array.setter
     def array(self, array):
-        simulation = self.entity.simulation
         if not self.column.is_permanent:
-            return self.put_in_cache(array, simulation.period)
-        if simulation.debug or simulation.trace:
+            return self.put_in_cache(array, self.simulation.period)
+        if self.simulation.debug or self.simulation.trace:
             variable_infos = (self.column.name, None)
-            step = simulation.traceback.get(variable_infos)
+            step = self.simulation.traceback.get(variable_infos)
             if step is None:
-                simulation.traceback[variable_infos] = dict(
+                self.simulation.traceback[variable_infos] = dict(
                     holder = self,
                     )
         self._array = array
@@ -118,7 +116,6 @@ class Holder(object):
         The returned dated holder is always of the requested period and this method never returns None.
         """
         entity = self.entity
-        simulation = entity.simulation
         if period is None:
             period = simulation.period
         column = self.column
@@ -308,7 +305,7 @@ class Holder(object):
             label = column.name,
             title = column.label,
             ))
-        period = self.entity.simulation.period
+        period = self.simulation.period
         formula = self.formula
         if formula is None or column.start is not None and column.start > period.stop.date or column.end is not None \
                 and column.end < period.start.date:
@@ -319,8 +316,7 @@ class Holder(object):
         array = self.get_array(period)
         if array is None:
             return None
-        entity = self.entity
-        return array.reshape([entity.simulation.steps_count, entity.step_size]).sum(1)
+        return array.reshape([self.simulation.steps_count, entity.step_size]).sum(1)
 
     @property
     def real_formula(self):
@@ -333,7 +329,7 @@ class Holder(object):
         self.formula.set_input(period, array)
 
     def put_in_cache(self, value, period, extra_params = None):
-        simulation = self.entity.simulation
+        simulation = self.simulation
 
         if (simulation.opt_out_cache and
                 simulation.tax_benefit_system.cache_blacklist and

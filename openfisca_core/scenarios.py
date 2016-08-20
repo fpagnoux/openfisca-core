@@ -45,16 +45,11 @@ class AbstractScenario(object):
         if variables_name_to_skip is None:
             variables_name_to_skip = set()
         tbs = self.tax_benefit_system
-        entity_by_key_plural = simulation.entity_by_key_plural
         simulation_period = simulation.period
         test_case = self.test_case
 
-        persons = None
-        for entity in entity_by_key_plural.itervalues():
-            if entity.is_persons_entity:
-                assert persons is None
-                persons = entity
-        assert persons is not None
+        persons = simulation.tax_benefit_system.person_entity
+        persons_step_size = simulation.get_entity_step_size(persons)
 
         if test_case is None:
             if self.input_variables is not None:
@@ -70,8 +65,9 @@ class AbstractScenario(object):
                         else:
                             holder.put_in_cache(array, period)
 
-            if persons.count == 0:
-                persons.count = 1
+            if simulation.get_entity_count(persons) == 0:
+                simulation.set_entity_count(persons, 1)
+
             for entity in simulation.entity_by_key_plural.itervalues():
                 if entity is persons:
                     continue
@@ -79,12 +75,12 @@ class AbstractScenario(object):
                 index_holder = simulation.get_or_new_holder(entity.index_for_person_variable_name)
                 index_array = index_holder.array
                 if index_array is None:
-                    index_holder.array = np.arange(persons.count, dtype = index_holder.column.dtype)
+                    index_holder.array = np.arange(get_entity_count(persons), dtype = index_holder.column.dtype)
 
                 role_holder = simulation.get_or_new_holder(entity.role_for_person_variable_name)
                 role_array = role_holder.array
                 if role_array is None:
-                    role_holder.array = role_array = np.zeros(persons.count, role_holder.column.dtype)
+                    role_holder.array = role_array = np.zeros(get_entity_count(persons), role_holder.column.dtype)
                 entity.roles_count = role_array.max() + 1
 
                 if entity.count == 0:
@@ -100,27 +96,46 @@ class AbstractScenario(object):
                     steps_count *= axis['count']
             simulation.steps_count = steps_count
 
-            for entity in entity_by_key_plural.itervalues():
-                entity.step_size = entity_step_size = len(test_case[entity.key_plural])
-                entity.count = steps_count * entity_step_size
-            persons_step_size = persons.step_size
+            for entity in simulation.tax_benefit_system.entities:
+                step_size = len(test_case[entity.key])
+                count = steps_count * step_size
+                simulation.set_entity_count(entity, count)
+                simulation.set_entity_step_size(entity, step_size)
 
             person_index_by_id = dict(
                 (person[u'id'], person_index)
-                for person_index, person in enumerate(test_case[persons.key_plural])
+                for person_index, person in enumerate(test_case[persons.key])
                 )
 
-            for entity_key_plural, entity in entity_by_key_plural.iteritems():
-                if entity.is_persons_entity:
+            for entity in simulation.tax_benefit_system.entities:
+                entity_index_column_name = self.tax_benefit_system.get_entity_index_column_name(entity)
+                entity_role_column_name = self.tax_benefit_system.get_entity_role_column_name(entity)
+
+                used_columns_name = set(
+                    key
+                    for entity_member in test_case[entity.key]
+                    for key, value in entity_member.iteritems()
+                    if value is not None and key not in (
+                        entity_index_column_name,
+                        entity_role_column_name,
+                        ) and key not in variables_name_to_skip
+                    )
+
+                if entity.is_person:
                     continue
-                entity_step_size = entity.step_size
-                simulation.get_or_new_holder(entity.index_for_person_variable_name).array = person_entity_id_array = \
-                    np.empty(steps_count * persons.step_size,
-                        dtype = tbs.get_column(entity.index_for_person_variable_name).dtype)
-                simulation.get_or_new_holder(entity.role_for_person_variable_name).array = person_entity_role_array = \
-                    np.empty(steps_count * persons.step_size,
-                        dtype = tbs.get_column(entity.role_for_person_variable_name).dtype)
-                for member_index, member in enumerate(test_case[entity_key_plural]):
+                entity_step_size = simulation.get_entity_step_size(entity)
+                persons_step_size
+
+                simulation.get_or_new_holder(entity_index_column_name).array = person_entity_id_array = \
+                    np.empty(steps_count * persons_step_size,
+                        dtype = tbs.get_column(entity_index_column_name).dtype)
+                simulation.get_or_new_holder(entity_role_column_name).array = person_entity_role_array = \
+                    np.empty(steps_count * persons_step_size,
+                        dtype = tbs.get_column(entity_role_column_name).dtype)
+                for member_index, member in enumerate(test_case[entity.key]):
+                    from pprint import pprint
+                    import ipdb
+                    ipdb.set_trace()
                     for person_role, person_id in entity.iter_member_persons_role_and_id(member):
                         person_index = person_index_by_id[person_id]
                         for step_index in range(steps_count):
@@ -129,16 +144,7 @@ class AbstractScenario(object):
                             person_entity_role_array[step_index * persons_step_size + person_index] = person_role
                 entity.roles_count = person_entity_role_array.max() + 1
 
-            for entity_key_plural, entity in entity_by_key_plural.iteritems():
-                used_columns_name = set(
-                    key
-                    for entity_member in test_case[entity_key_plural]
-                    for key, value in entity_member.iteritems()
-                    if value is not None and key not in (
-                        entity.index_for_person_variable_name,
-                        entity.role_for_person_variable_name,
-                        ) and key not in variables_name_to_skip
-                    )
+
                 for variable_name, column in tbs.column_by_name.iteritems():
                     if column.entity == entity.symbol and variable_name in used_columns_name:
                         variable_periods = set()
@@ -286,14 +292,14 @@ class AbstractScenario(object):
                 for parallel_axes_index, parallel_axes in enumerate(data['axes']):
                     first_axis = parallel_axes[0]
                     axis_count = first_axis['count']
-                    axis_entity_key_plural = tbs.get_column(first_axis['name']).entity_key_plural
+                    axis_entity_key_plural = tbs.get_column(first_axis['name']).entity_class.key
                     first_axis_period = first_axis['period'] or data['period']
                     for axis_index, axis in enumerate(parallel_axes):
                         if axis['min'] >= axis['max']:
                             errors.setdefault('axes', {}).setdefault(parallel_axes_index, {}).setdefault(
                                 axis_index, {})['max'] = state._(u"Max value must be greater than min value")
                         column = tbs.get_column(axis['name'])
-                        if axis['index'] >= len(data['test_case'][column.entity_key_plural]):
+                        if axis['index'] >= len(data['test_case'][column.entity_class.key]):
                             errors.setdefault('axes', {}).setdefault(parallel_axes_index, {}).setdefault(
                                 axis_index, {})['index'] = state._(u"Index must be lower than {}").format(
                                     len(data['test_case'][column.entity_key_plural]))
@@ -574,7 +580,7 @@ def make_json_or_python_to_test(tax_benefit_system, default_absolute_error_margi
                     ),
                 ).iteritems(),
             (
-                (entity_class.key_plural, conv.pipe(
+                (entity_class.key, conv.pipe(
                     conv.make_item_to_singleton(),
                     conv.test_isinstance(list),
                     ))

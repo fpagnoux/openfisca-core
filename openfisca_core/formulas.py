@@ -275,8 +275,7 @@ class DatedFormula(AbstractGroupedFormula):
 
         holder = self.holder
         column = holder.column
-        array = np.empty(holder.entity.count, dtype = column.dtype)
-        array.fill(column.default)
+        array = holder.default_array()
         return holder.put_in_cache(array, period, parameters.get('extra_params'))
 
     def graph_parameters(self, edges, get_input_variables_and_parameters, nodes, visited):

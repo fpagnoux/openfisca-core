@@ -141,7 +141,7 @@ class Column(object):
                 end = end.isoformat()
             self_json['end'] = end
         if self.entity is not None:
-            self_json['entity'] = self.entity_key_plural
+            self_json['entity'] = self.entity_class.key
         if self.label is not None:
             self_json['label'] = self.label
         line_number = self.formula_class.line_number

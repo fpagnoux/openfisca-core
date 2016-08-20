@@ -264,10 +264,10 @@ class TaxBenefitSystem(object):
         return self._legislation_json
 
     def get_entity_index_column_name(self, entity):
-        return u"id_{}".format(entity.key)
+        return u"id_{}".format(entity.key) if not entity.is_person else None
 
     def get_entity_role_column_name(self, entity):
-        return u"role_in_{}".format(entity.key)
+        return u"role_in_{}".format(entity.key) if not entity.is_person else None
 
 
 

@@ -9,7 +9,6 @@ from os import path
 from openfisca_core import conv
 from openfisca_core.columns import IntCol
 from openfisca_core.entities import Entity
-from openfisca_core.variables import Variable
 from openfisca_core.scenarios import AbstractScenario, set_entities_json_id
 from openfisca_core.taxbenefitsystems import TaxBenefitSystem
 
@@ -154,8 +153,7 @@ class Scenario(AbstractScenario):
                                         (
                                             (column.name, column.json_to_python)
                                             for column in column_by_name.itervalues()
-                                            if column.entity_class == Individus and column.name not in (
-                                                'idfam', 'idfoy', 'idmen', 'quifam', 'quifoy', 'quimen')
+                                            if column.entity_class == Individus
                                             ),
                                         )),
                                     drop_none_values = True,
@@ -225,6 +223,5 @@ class DummyTaxBenefitSystem(TaxBenefitSystem):
     def __init__(self):
         TaxBenefitSystem.__init__(self, entities)
         self.Scenario = Scenario
-        self.add_variables_from_file(__file__)
         self.add_legislation_params(path_to_root_params)
         self.add_legislation_params(path_to_crds_params, 'csg.activite')

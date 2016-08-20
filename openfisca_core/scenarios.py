@@ -122,35 +122,34 @@ class AbstractScenario(object):
                         ) and key not in variables_name_to_skip
                     )
 
-                if entity.is_person:
-                    continue
-                entity_step_size = simulation.get_entity_step_size(entity)
+                if not entity.is_person:
 
-                simulation.get_or_new_holder(entity_index_column_name).array = person_entity_id_array = np.empty(
-                    steps_count * persons_step_size,
-                    dtype = tbs.get_column(entity_index_column_name).dtype
-                    )
-                simulation.get_or_new_holder(entity_role_column_name).array = person_entity_role_array = np.empty(
-                    steps_count * persons_step_size,
-                    dtype = tbs.get_column(entity_role_column_name).dtype
-                    )
-                for member_index, member in enumerate(test_case[entity.key]):
-                    for person_role, person_id in entity.iter_member_persons_role_and_id(member):
+                    entity_step_size = simulation.get_entity_step_size(entity)
+
+                    simulation.get_or_new_holder(entity_index_column_name).array = person_entity_id_array = np.empty(
+                        steps_count * persons_step_size,
+                        dtype = tbs.get_column(entity_index_column_name).dtype
+                        )
+                    simulation.get_or_new_holder(entity_role_column_name).array = person_entity_role_array = np.empty(
+                        steps_count * persons_step_size,
+                        dtype = tbs.get_column(entity_role_column_name).dtype
+                        )
+                    for member_index, member in enumerate(test_case[entity.key]):
+                        for person_role, person_id in entity.iter_member_persons_role_and_id(member):
 
 
-                        person_index = person_index_by_id[person_id]
-                        for step_index in range(steps_count):
-                            person_entity_id_array[step_index * persons_step_size + person_index] = step_index * entity_step_size + member_index
-                            person_entity_role_array[step_index * persons_step_size + person_index] = person_role
-                entity.roles_count = person_entity_role_array.max() + 1
-
+                            person_index = person_index_by_id[person_id]
+                            for step_index in range(steps_count):
+                                person_entity_id_array[step_index * persons_step_size + person_index] = step_index * entity_step_size + member_index
+                                person_entity_role_array[step_index * persons_step_size + person_index] = person_role
+                    entity.roles_count = person_entity_role_array.max() + 1
 
                 for variable_name, column in tbs.column_by_name.iteritems():
                     if column.entity_class == entity and variable_name in used_columns_name:
                         variable_periods = set()
                         for cell in (
                                 entity_member.get(variable_name)
-                                for entity_member in test_case[entity_key_plural]
+                                for entity_member in test_case[entity.key]
                                 ):
                             if isinstance(cell, dict):
                                 if any(value is not None for value in cell.itervalues()):
@@ -168,7 +167,7 @@ class AbstractScenario(object):
                                         if variable_period == simulation_period else None)
                                     for cell in (
                                         entity_member.get(variable_name)
-                                        for entity_member in test_case[entity_key_plural]
+                                        for entity_member in test_case[entity.key]
                                         )
                                     )
                                 ]
@@ -294,7 +293,7 @@ class AbstractScenario(object):
                 for parallel_axes_index, parallel_axes in enumerate(data['axes']):
                     first_axis = parallel_axes[0]
                     axis_count = first_axis['count']
-                    axis_entity_key_plural = tbs.get_column(first_axis['name']).entity_class.key
+                    axis_entity_key = tbs.get_column(first_axis['name']).entity_class.key
                     first_axis_period = first_axis['period'] or data['period']
                     for axis_index, axis in enumerate(parallel_axes):
                         if axis['min'] >= axis['max']:
@@ -304,12 +303,12 @@ class AbstractScenario(object):
                         if axis['index'] >= len(data['test_case'][column.entity_class.key]):
                             errors.setdefault('axes', {}).setdefault(parallel_axes_index, {}).setdefault(
                                 axis_index, {})['index'] = state._(u"Index must be lower than {}").format(
-                                    len(data['test_case'][column.entity_key_plural]))
+                                    len(data['test_case'][column.entity_class.key]))
                         if axis_index > 0:
                             if axis['count'] != axis_count:
                                 errors.setdefault('axes', {}).setdefault(parallel_axes_index, {}).setdefault(
                                     axis_index, {})['count'] = state._(u"Parallel indexes must have the same count")
-                            if column.entity_key_plural != axis_entity_key_plural:
+                            if column.entity_class.key != axis_entity_key:
                                 errors.setdefault('axes', {}).setdefault(parallel_axes_index, {}).setdefault(
                                     axis_index, {})['period'] = state._(
                                         u"Parallel indexes must belong to the same entity")
@@ -504,12 +503,12 @@ def make_json_or_python_to_input_variables(tax_benefit_system, period):
         if input_variables is None:
             return input_variables, None
 
-        count_by_entity_key_plural = {}
+        count_by_entity_key = {}
         errors = {}
         for variable_name, array_by_period in input_variables.iteritems():
             column = tax_benefit_system.get_column(variable_name)
             entity_key_plural = column.entity_key_plural
-            entity_count = count_by_entity_key_plural.get(entity_key_plural, 0)
+            entity_count = count_by_entity_key.get(entity_key_plural, 0)
             for variable_period, variable_array in array_by_period.iteritems():
                 if entity_count == 0:
                     count_by_entity_key_plural[entity_key_plural] = entity_count = len(variable_array)

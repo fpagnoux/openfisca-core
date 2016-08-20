@@ -49,7 +49,6 @@ class AbstractScenario(object):
         test_case = self.test_case
 
         persons = simulation.tax_benefit_system.person_entity
-        persons_step_size = simulation.get_entity_step_size(persons)
 
         if test_case is None:
             if self.input_variables is not None:
@@ -102,6 +101,8 @@ class AbstractScenario(object):
                 simulation.set_entity_count(entity, count)
                 simulation.set_entity_step_size(entity, step_size)
 
+            persons_step_size = simulation.get_entity_step_size(persons)
+
             person_index_by_id = dict(
                 (person[u'id'], person_index)
                 for person_index, person in enumerate(test_case[persons.key])
@@ -124,29 +125,28 @@ class AbstractScenario(object):
                 if entity.is_person:
                     continue
                 entity_step_size = simulation.get_entity_step_size(entity)
-                persons_step_size
 
-                simulation.get_or_new_holder(entity_index_column_name).array = person_entity_id_array = \
-                    np.empty(steps_count * persons_step_size,
-                        dtype = tbs.get_column(entity_index_column_name).dtype)
-                simulation.get_or_new_holder(entity_role_column_name).array = person_entity_role_array = \
-                    np.empty(steps_count * persons_step_size,
-                        dtype = tbs.get_column(entity_role_column_name).dtype)
+                simulation.get_or_new_holder(entity_index_column_name).array = person_entity_id_array = np.empty(
+                    steps_count * persons_step_size,
+                    dtype = tbs.get_column(entity_index_column_name).dtype
+                    )
+                simulation.get_or_new_holder(entity_role_column_name).array = person_entity_role_array = np.empty(
+                    steps_count * persons_step_size,
+                    dtype = tbs.get_column(entity_role_column_name).dtype
+                    )
                 for member_index, member in enumerate(test_case[entity.key]):
-                    from pprint import pprint
-                    import ipdb
-                    ipdb.set_trace()
                     for person_role, person_id in entity.iter_member_persons_role_and_id(member):
+
+
                         person_index = person_index_by_id[person_id]
                         for step_index in range(steps_count):
-                            person_entity_id_array[step_index * persons_step_size + person_index] \
-                                = step_index * entity_step_size + member_index
+                            person_entity_id_array[step_index * persons_step_size + person_index] = step_index * entity_step_size + member_index
                             person_entity_role_array[step_index * persons_step_size + person_index] = person_role
                 entity.roles_count = person_entity_role_array.max() + 1
 
 
                 for variable_name, column in tbs.column_by_name.iteritems():
-                    if column.entity == entity.symbol and variable_name in used_columns_name:
+                    if column.entity_class == entity and variable_name in used_columns_name:
                         variable_periods = set()
                         for cell in (
                                 entity_member.get(variable_name)
@@ -192,15 +192,17 @@ class AbstractScenario(object):
                     first_axis = parallel_axes[0]
                     axis_count = first_axis['count']
                     axis_entity = simulation.get_variable_entity(first_axis['name'])
+                    axis_entity_count = simulation.get_entity_count(axis_entity)
+                    axis_entity_step_size = simulation.get_entity_step_size(axis_entity)
                     for axis in parallel_axes:
                         axis_period = axis['period'] or simulation_period
                         holder = simulation.get_or_new_holder(axis['name'])
                         column = holder.column
                         array = holder.get_array(axis_period)
                         if array is None:
-                            array = np.empty(axis_entity.count, dtype = column.dtype)
+                            array = np.empty(axis_entity_count, dtype = column.dtype)
                             array.fill(column.default)
-                        array[axis['index']:: axis_entity.step_size] = np.linspace(axis['min'], axis['max'], axis_count)
+                        array[axis['index']:: axis_entity_step_size] = np.linspace(axis['min'], axis['max'], axis_count)
                         if use_set_input_hooks:
                             holder.set_input(axis_period, array)
                         else:

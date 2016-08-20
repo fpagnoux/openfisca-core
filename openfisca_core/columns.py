@@ -48,7 +48,7 @@ class Column(object):
             self.default = default
         if end is not None:
             self.end = end
-        self.entity = entity or 'ind'
+        # self.entity = entity or 'ind'
         if function is not None:
             self.function = function
         if is_permanent:

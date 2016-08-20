@@ -23,10 +23,10 @@ Familles = Entity(
     key = "familles",
     label = u'Famille',
     roles = {
-        'enfant': {
+        'enfants': {
             'label': u'Enfants'
         },
-        'parent': {
+        'parents': {
             'label': u'Parents',
             'max': 2
         }
@@ -125,7 +125,7 @@ class Scenario(AbstractScenario):
                                         (
                                             (column.name, column.json_to_python)
                                             for column in column_by_name.itervalues()
-                                            if column.entity == 'fam'
+                                            if column.entity_class == Familles
                                             ),
                                         )),
                                     drop_none_values = True,
@@ -154,7 +154,7 @@ class Scenario(AbstractScenario):
                                         (
                                             (column.name, column.json_to_python)
                                             for column in column_by_name.itervalues()
-                                            if column.entity == 'ind' and column.name not in (
+                                            if column.entity_class == Individus and column.name not in (
                                                 'idfam', 'idfoy', 'idmen', 'quifam', 'quifoy', 'quimen')
                                             ),
                                         )),

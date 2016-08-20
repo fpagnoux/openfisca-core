@@ -316,7 +316,7 @@ class Simulation(object):
         holder = self.get_holder(variable_name)
         return u'{}@{}<{}>{}'.format(
             variable_name,
-            holder.entity.key_plural,
+            holder.entity.key,
             str(period),
             stringify_array(holder.get_array(period)),
             )
@@ -349,4 +349,14 @@ class Simulation(object):
 
     def get_entity_count(self, entity):
         return self.entity_count[entity.key]['count']
+
+    def get_entity_index_array(self, entity):
+        tbs = self.tax_benefit_system
+        index_column_name = tbs.get_entity_index_column_name(entity)
+        return self.holder_by_name[index_column_name].array
+
+    def get_entity_role_array(self, entity):
+        tbs = self.tax_benefit_system
+        role_column_name = tbs.get_entity_role_column_name(entity)
+        return self.holder_by_name[role_column_name].array
 

@@ -61,6 +61,7 @@ class Holder(object):
         assert column is not None
         assert self.column is None
         self.column = column
+        self.entity = column.entity_class
         self.simulation = simulation
 
     @property
@@ -301,7 +302,7 @@ class Holder(object):
         visited.add(self)
         nodes.append(dict(
             id = column.name,
-            group = self.entity.key_plural,
+            group = self.entity.key,
             label = column.name,
             title = column.label,
             ))
@@ -398,3 +399,9 @@ class Holder(object):
                         for cell in array_or_dict.tolist()
                         ]
         return value_json
+
+    def default_array(self):
+        array_size = self.simulation.get_entity_count(self.column.entity_class)
+        array = np.empty(array_size, dtype = self.column.dtype)
+        array.fill(self.column.default)
+        return array

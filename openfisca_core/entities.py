@@ -13,8 +13,27 @@ class Entity(object):
         self.label = label
         self.roles = roles
         self.is_person = is_person
-        pass
+
+# Familles = Entity(
+#     key = "familles",
+#     label = u'Famille',
+#     roles = {
+#         'enfant': {
+#             'label': u'Enfants'
+#         },
+#         'parent': {
+#             'label': u'Parents',
+#             'max': 2
+#         }
+#     }
+#     )
+
 
     def iter_member_persons_role_and_id(self, member):
-        for role in roles:
-
+        # one by one, yield individu_role, individu_id
+        role_index = 0
+        for role in self.roles:
+            individus = member[role]
+            for individu in individus:
+                yield role_index, individu
+            role_index +=1

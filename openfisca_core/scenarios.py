@@ -57,8 +57,8 @@ class AbstractScenario(object):
                     holder = simulation.get_or_new_holder(variable_name)
                     entity = holder.entity
                     for period, array in array_by_period.iteritems():
-                        if entity.count == 0:
-                            entity.count = len(array)
+                        if simulation.get_entity_count(entity) == 0:
+                            simulation.set_entity_count(entity, len(array))
                         if use_set_input_hooks:
                             holder.set_input(period, array)
                         else:
@@ -67,25 +67,27 @@ class AbstractScenario(object):
             if simulation.get_entity_count(persons) == 0:
                 simulation.set_entity_count(persons, 1)
 
-            for entity in simulation.entity_by_key_plural.itervalues():
+            for entity in simulation.tax_benefit_system.entities:
                 if entity is persons:
                     continue
 
-                index_holder = simulation.get_or_new_holder(entity.index_for_person_variable_name)
+                index_for_person_variable_name = simulation.tax_benefit_system.get_entity_index_column_name(entity)
+                index_holder = simulation.get_or_new_holder(index_for_person_variable_name)
                 index_array = index_holder.array
                 if index_array is None:
-                    index_holder.array = np.arange(get_entity_count(persons), dtype = index_holder.column.dtype)
+                    index_holder.array = np.arange(simulation.get_entity_count(persons), dtype = index_holder.column.dtype)
 
-                role_holder = simulation.get_or_new_holder(entity.role_for_person_variable_name)
+                role_for_person_variable_name = simulation.tax_benefit_system.get_entity_role_column_name(entity)
+                role_holder = simulation.get_or_new_holder(role_for_person_variable_name)
                 role_array = role_holder.array
                 if role_array is None:
-                    role_holder.array = role_array = np.zeros(get_entity_count(persons), role_holder.column.dtype)
+                    role_holder.array = role_array = np.zeros(simulation.get_entity_count(persons), role_holder.column.dtype)
                 entity.roles_count = role_array.max() + 1
 
-                if entity.count == 0:
-                    entity.count = max(index_holder.array) + 1
+                if simulation.get_entity_count(entity) == 0:
+                    simulation.set_entity_count(entity, max(index_holder.array) + 1)
                 else:
-                    assert entity.count == max(index_holder.array) + 1
+                    assert simulation.get_entity_count(entity) == max(index_holder.array) + 1
         else:
             steps_count = 1
             if self.axes is not None:
@@ -226,8 +228,7 @@ class AbstractScenario(object):
                             column = holder.column
                             array = holder.get_array(axis_period)
                             if array is None:
-                                array = np.empty(axis_entity.count, dtype = column.dtype)
-                                array.fill(column.default)
+                                array = holder.default_array()
                             array[axis['index']:: axis_entity.step_size] = axis['min'] \
                                 + mesh.reshape(steps_count) * (axis['max'] - axis['min']) / (axis_count - 1)
                             if use_set_input_hooks:
@@ -507,11 +508,11 @@ def make_json_or_python_to_input_variables(tax_benefit_system, period):
         errors = {}
         for variable_name, array_by_period in input_variables.iteritems():
             column = tax_benefit_system.get_column(variable_name)
-            entity_key_plural = column.entity_key_plural
-            entity_count = count_by_entity_key.get(entity_key_plural, 0)
+            entity_key = column.entity_class.key
+            entity_count = count_by_entity_key.get(entity_key, 0)
             for variable_period, variable_array in array_by_period.iteritems():
                 if entity_count == 0:
-                    count_by_entity_key_plural[entity_key_plural] = entity_count = len(variable_array)
+                    count_by_entity_key[entity_key] = entity_count = len(variable_array)
                 elif len(variable_array) != entity_count:
                     errors[column.name] = state._(
                         u"Array has not the same length as other variables of entity {}: {} instead of {}").format(

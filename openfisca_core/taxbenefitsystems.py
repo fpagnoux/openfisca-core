@@ -8,6 +8,7 @@ from os import path
 from imp import find_module, load_module
 import importlib
 import logging
+
 from setuptools import find_packages
 
 from . import conv, legislations, legislationsxml

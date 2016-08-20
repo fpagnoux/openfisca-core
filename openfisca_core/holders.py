@@ -139,8 +139,7 @@ class Holder(object):
                     "Requested period {} differs from {} returned by variable {}".format(period,
                         formula_dated_holder.period, column.name)
             return formula_dated_holder
-        array = np.empty(entity.count, dtype = column.dtype)
-        array.fill(column.default)
+        array = self.default_array()
         return self.put_in_cache(array, period)
 
     def compute_add(self, period = None, **parameters):
@@ -317,7 +316,8 @@ class Holder(object):
         array = self.get_array(period)
         if array is None:
             return None
-        return array.reshape([self.simulation.steps_count, entity.step_size]).sum(1)
+        entity_step_size = self.simulation.get_entity_step_size(self.entity)
+        return array.reshape([self.simulation.steps_count, entity_step_size]).sum(1)
 
     @property
     def real_formula(self):

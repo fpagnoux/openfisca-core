@@ -414,7 +414,8 @@ class SimpleFormula(AbstractFormula):
             array = array_or_dated_holder
             assert isinstance(array, np.ndarray), u"Expected a holder or a Numpy array. Got: {}".format(array).encode(
                 'utf-8')
-            assert array.size == persons.count, u"Expected an array of size {}. Got: {}".format(persons.count,
+            persons_count = simulation.get_entity_count(persons)
+            assert array.size == persons_count, u"Expected an array of size {}. Got: {}".format(persons_count,
                 array.size)
         entity_index_array = persons.simulation.holder_by_name[index_for_person_variable_name].array
         if roles is None:
@@ -465,7 +466,8 @@ class SimpleFormula(AbstractFormula):
             if default is None:
                 default = 0
         assert not entity.is_person
-        target_array = np.empty(persons.count, dtype = array.dtype)
+        persons_count = simulation.get_entity_count(persons)
+        target_array = np.empty(persons_count, dtype = array.dtype)
         target_array.fill(default)
         index_for_person_variable_name = simulation.tax_benefit_system.get_entity_index_column_name(entity)
         entity_index_array = persons.simulation.holder_by_name[entity.index_for_person_variable_name].array
@@ -674,7 +676,8 @@ class SimpleFormula(AbstractFormula):
             array = array_or_dated_holder
             assert isinstance(array, np.ndarray), u"Expected a holder or a Numpy array. Got: {}".format(array).encode(
                 'utf-8')
-            assert array.size == persons.count, u"Expected an array of size {}. Got: {}".format(persons.count,
+            persons_count = simulation.get_entity_count(persons)
+            assert array.size == persons_count, u"Expected an array of size {}. Got: {}".format(persons_count,
                 array.size)
             if default is None:
                 default = 0
@@ -730,7 +733,8 @@ class SimpleFormula(AbstractFormula):
             array = array_or_dated_holder
             assert isinstance(array, np.ndarray), u"Expected a holder or a Numpy array. Got: {}".format(array).encode(
                 'utf-8')
-            assert array.size == persons.count, u"Expected an array of size {}. Got: {}".format(persons.count,
+            persons_count = simulation.get_entity_count(persons)
+            assert array.size == persons_count, u"Expected an array of size {}. Got: {}".format(persons_count,
                 array.size)
             if default is None:
                 default = 0
@@ -772,13 +776,14 @@ class SimpleFormula(AbstractFormula):
             array = array_or_dated_holder
             assert isinstance(array, np.ndarray), u"Expected a holder or a Numpy array. Got: {}".format(array).encode(
                 'utf-8')
-            assert array.size == persons.count, u"Expected an array of size {}. Got: {}".format(persons.count,
+            persons_count = simulation.get_entity_count(persons)
+            assert array.size == persons_count, u"Expected an array of size {}. Got: {}".format(persons_count,
                 array.size)
         index_for_person_variable_name = simulation.tax_benefit_system.get_entity_index_column_name(entity)
         entity_index_array = persons.simulation.holder_by_name[index_for_person_variable_name].array
         if roles is None:
             roles = range(entity.roles_count)
-        target_array = np.zeros(entity.count, dtype = array.dtype if array.dtype != np.bool else np.int16)
+        target_array = np.zeros(simulation.get_entity_count(entity), dtype = array.dtype if array.dtype != np.bool else np.int16)
         for role in roles:
             # TODO: Mettre les filtres en cache dans la simulation
             role_for_person_variable_name = holder.simulation.tax_benefit_system.get_entity_role_column_name(entity)

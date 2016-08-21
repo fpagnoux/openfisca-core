@@ -359,7 +359,28 @@ class Simulation(object):
         role_column_name = tbs.get_entity_role_column_name(entity)
         return self.holder_by_name[role_column_name].array
 
-    def transpose_to_entity(self, array, target_entity, origin_entity = None):
+    def get_entity_position_array(self, entity):
+        tbs = self.tax_benefit_system
+        position_column_name = tbs.get_entity_position_column_name(entity)
+        return self.holder_by_name[position_column_name].array
 
-        af = self.cast_from_entity_to_role(array, entity = origin_entity, role = '')
-        af = self.sum_by_entity(af, entity = target_entity)
+    def transpose_to_entity(self, array, target_entity, origin_entity):
+        input_projected = self.project_on_persons(array, entity = origin_entity)
+        origin_entity_position_array = self.get_entity_position_array(origin_entity)
+
+        # We project the origin entity quantity on the first individu of this entity
+        boolean_filter = origin_entity_position_array == 0
+
+        target_entity_index_array = self.get_entity_index_array(target_entity)
+
+        result = self.empty_array(target_entity)
+        result[target_entity_index_array[boolean_filter]] = input_projected[boolean_filter]
+
+        return result
+
+    def project_on_persons(self, array, entity):
+        entity_index_array = self.get_entity_index_array(entity)
+        return array[entity_index_array]
+
+    def empty_array(self, entity):
+        return np.zeros(self.get_entity_count(entity))

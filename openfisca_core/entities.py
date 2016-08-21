@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from enumerations import Enum
+
 
 class Entity(object):
 
@@ -11,7 +13,6 @@ class Entity(object):
 
     def iter_member_persons_role_and_id(self, member):
         # one by one, yield individu_role, individu_id
-        role_index = 0
         for role in self.roles:
             individus = member[role]
             if individus is not None:
@@ -19,5 +20,7 @@ class Entity(object):
                     individus = [individus]
 
                 for individu in individus:
-                    yield role_index, individu
-            role_index += 1
+                    yield role, individu
+
+    def get_role_enum(self):
+        return Enum(self.roles.keys())

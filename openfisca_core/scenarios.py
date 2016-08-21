@@ -142,7 +142,7 @@ class AbstractScenario(object):
                             for step_index in range(steps_count):
                                 person_entity_id_array[step_index * persons_step_size + person_index] = step_index * entity_step_size + member_index
                                 person_entity_role_array[step_index * persons_step_size + person_index] = person_role
-                    entity.roles_count = person_entity_role_array.max() + 1
+                    entity.roles_count = len(np.unique(person_entity_role_array))
 
                 for variable_name, column in tbs.column_by_name.iteritems():
                     if column.entity_class == entity and variable_name in used_columns_name:

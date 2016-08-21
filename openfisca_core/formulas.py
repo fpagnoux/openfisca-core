@@ -309,7 +309,6 @@ class EntityToPerson(AbstractEntityToEntity):
         """
         holder = self.holder
         simulation = holder.simulation
-        tbs = simulation.tax_benefit_system
         persons = holder.column.entity_class
         assert persons.is_person
 
@@ -319,19 +318,18 @@ class EntityToPerson(AbstractEntityToEntity):
         persons_count = simulation.get_entity_count(persons)
         target_array = np.empty(persons_count, dtype = array.dtype)
         target_array.fill(dated_holder.column.default)
-        index_for_person_variable_name = tbs.get_entity_index_column_name(entity)
-        role_for_person_variable_name = tbs.get_entity_role_column_name(entity)
-        entity_index_array = simulation.holder_by_name[index_for_person_variable_name].array
+        entity_index_array = simulation.get_entity_index_array(entity)
         if roles is None:
-            roles = range(entity.roles_count)
-        for role in roles:
-            boolean_filter = holder.simulation.holder_by_name[role_for_person_variable_name].array == role
-            try:
-                target_array[boolean_filter] = array[entity_index_array[boolean_filter]]
-            except:
-                log.error(u'An error occurred while transforming array for role {}[{}] in function {}'.format(
-                    entity.key, role, holder.column.name))
-                raise
+            roles = entity.roles
+
+        boolean_filters = [simulation.get_entity_role_array(entity) == role for role in roles]
+        boolean_filter = np.logical_or.reduce(boolean_filters)
+        try:
+            target_array[boolean_filter] = array[entity_index_array[boolean_filter]]
+        except:
+            log.error(u'An error occurred while transforming array for role {}[{}] in function {}'.format(
+                entity.key, role, holder.column.name))
+            raise
         return target_array
 
 
@@ -372,17 +370,19 @@ class PersonToEntity(AbstractEntityToEntity):
             operation = self.operation
             assert operation in ('add', 'or'), 'Invalid operation {} in formula {}'.format(operation,
                 holder.column.name)
-            if roles is None:
-                roles = range(entity.roles_count)  # FIXME
             target_array = self.zeros(dtype = np.bool if operation == 'or'
               else array.dtype if array.dtype != np.bool
               else np.int16)
-            for role in roles:
-                # TODO: Cache filters.
-                boolean_filter = simulation.get_entity_role_array(entity) == role
-                target_array = np.bincount(entity_index_array[boolean_filter], weights = array[boolean_filter])
-                # See http://docs.scipy.org/doc/numpy/reference/arrays.indexing.html#Advanced-indexing
-                # http://stackoverflow.com/questions/4373631/sum-array-by-number-in-numpy
+
+            if roles is None:
+                roles = entity.roles
+
+            boolean_filters = [simulation.get_entity_role_array(entity) == role for role in roles]
+            boolean_filter = np.logical_or.reduce(boolean_filters)
+
+            target_array += np.bincount(entity_index_array[boolean_filter], weights = array[boolean_filter])
+            # See http://docs.scipy.org/doc/numpy/reference/arrays.indexing.html#Advanced-indexing
+            # http://stackoverflow.com/questions/4373631/sum-array-by-number-in-numpy
 
         return target_array
 

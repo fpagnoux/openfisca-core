@@ -238,6 +238,13 @@ class AbstractScenario(object):
         conv.check(self.make_json_or_python_to_attributes(repair = repair))(attributes)
         return self
 
+    def init_from_test_case(self, period, test_case):
+        conv.check(self.make_json_or_python_to_attributes())(dict(
+            period = period,
+            test_case = test_case
+            ))
+        return self
+
     def make_json_or_python_to_attributes(self, repair = False):
         tbs = self.tax_benefit_system
 

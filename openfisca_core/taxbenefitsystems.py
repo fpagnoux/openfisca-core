@@ -14,8 +14,7 @@ from setuptools import find_packages
 from . import conv, legislations, legislationsxml
 from variables import AbstractVariable
 from formulas import neutralize_column, new_filled_column, SimpleFormula
-from columns import IntCol
-
+from columns import IntCol, EnumCol
 
 log = logging.getLogger(__name__)
 
@@ -80,7 +79,7 @@ class TaxBenefitSystem(object):
             role_column = new_filled_column(
                 name = u"role_in_{}".format(entity_class.key),
                 entity_class = self.person_entity,
-                column = IntCol,
+                column = EnumCol(enum = entity_class.get_role_enum()),
                 is_permanent = True,
                 formula_class = SimpleFormula
                 )

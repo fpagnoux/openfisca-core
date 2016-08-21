@@ -358,3 +358,8 @@ class Simulation(object):
         tbs = self.tax_benefit_system
         role_column_name = tbs.get_entity_role_column_name(entity)
         return self.holder_by_name[role_column_name].array
+
+    def transpose_to_entity(self, array, target_entity, origin_entity = None):
+
+        af = self.cast_from_entity_to_role(array, entity = origin_entity, role = '')
+        af = self.sum_by_entity(af, entity = target_entity)

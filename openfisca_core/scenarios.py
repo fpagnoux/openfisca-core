@@ -113,6 +113,7 @@ class AbstractScenario(object):
             for entity in simulation.tax_benefit_system.entities:
                 entity_index_column_name = self.tax_benefit_system.get_entity_index_column_name(entity)
                 entity_role_column_name = self.tax_benefit_system.get_entity_role_column_name(entity)
+                entity_position_column_name = self.tax_benefit_system.get_entity_position_column_name(entity)
 
                 used_columns_name = set(
                     key
@@ -121,6 +122,7 @@ class AbstractScenario(object):
                     if value is not None and key not in (
                         entity_index_column_name,
                         entity_role_column_name,
+                        entity_position_column_name,
                         ) and key not in variables_name_to_skip
                     )
 
@@ -136,12 +138,20 @@ class AbstractScenario(object):
                         steps_count * persons_step_size,
                         dtype = tbs.get_column(entity_role_column_name).dtype
                         )
+                    simulation.get_or_new_holder(entity_position_column_name).array = person_entity_position_array = np.empty(
+                        steps_count * persons_step_size,
+                        dtype = tbs.get_column(entity_position_column_name).dtype
+                        )
+
                     for member_index, member in enumerate(test_case[entity.key]):
-                        for person_role, person_id in entity.iter_member_persons_role_and_id(member):
+                        for person_position, person_role, person_id in entity.iter_member_persons_role_and_id(member):
                             person_index = person_index_by_id[person_id]
                             for step_index in range(steps_count):
-                                person_entity_id_array[step_index * persons_step_size + person_index] = step_index * entity_step_size + member_index
-                                person_entity_role_array[step_index * persons_step_size + person_index] = person_role
+                                individu_index = step_index * persons_step_size + person_index
+
+                                person_entity_id_array[individu_index] = step_index * entity_step_size + member_index
+                                person_entity_role_array[individu_index] = person_role
+                                person_entity_position_array[individu_index] = person_position
                     entity.roles_count = len(np.unique(person_entity_role_array))
 
                 for variable_name, column in tbs.column_by_name.iteritems():

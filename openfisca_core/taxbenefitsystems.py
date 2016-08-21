@@ -84,8 +84,17 @@ class TaxBenefitSystem(object):
                 formula_class = SimpleFormula
                 )
 
+            position_column = new_filled_column(
+                name = u"position_in_{}".format(entity_class.key),
+                entity_class = self.person_entity,
+                column = IntCol,
+                is_permanent = True,
+                formula_class = SimpleFormula
+                )
+
             self.add_column(id_column)
             self.add_column(role_column)
+            self.add_column(position_column)
 
     @property
     def base_tax_benefit_system(self):
@@ -266,3 +275,6 @@ class TaxBenefitSystem(object):
 
     def get_entity_role_column_name(self, entity):
         return u"role_in_{}".format(entity.key) if not entity.is_person else None
+
+    def get_entity_position_column_name(self, entity):
+        return u"position_in_{}".format(entity.key) if not entity.is_person else None

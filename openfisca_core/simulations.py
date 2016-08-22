@@ -350,6 +350,9 @@ class Simulation(object):
         result[target_entity_index_array[boolean_filter]] = input_projected[boolean_filter]
 
         return result
+    def sum_in_entity(self, array, entity):
+        entity_index_array = self.get_entity_index_array(entity)
+        return np.bincount(entity_index_array, weights = array)
 
     def project_on_persons(self, array, entity):
         entity_index_array = self.get_entity_index_array(entity)

@@ -370,9 +370,6 @@ class PersonToEntity(AbstractEntityToEntity):
             operation = self.operation
             assert operation in ('add', 'or'), 'Invalid operation {} in formula {}'.format(operation,
                 holder.column.name)
-            target_array = self.zeros(dtype = np.bool if operation == 'or'
-              else array.dtype if array.dtype != np.bool
-              else np.int16)
 
             if roles is None:
                 roles = entity.roles
@@ -380,7 +377,7 @@ class PersonToEntity(AbstractEntityToEntity):
             boolean_filters = [simulation.get_entity_role_array(entity) == role for role in roles]
             boolean_filter = np.logical_or.reduce(boolean_filters)
 
-            target_array += np.bincount(entity_index_array[boolean_filter], weights = array[boolean_filter])
+            target_array = np.bincount(entity_index_array[boolean_filter], weights = array[boolean_filter])
             # See http://docs.scipy.org/doc/numpy/reference/arrays.indexing.html#Advanced-indexing
             # http://stackoverflow.com/questions/4373631/sum-array-by-number-in-numpy
 

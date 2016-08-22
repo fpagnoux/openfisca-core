@@ -62,7 +62,7 @@ class Simulation(object):
             for entity in self.tax_benefit_system.entities
             )
         # self.entity_by_key_singular = dict(
-        #     (entity.key_singular, entity)
+        #     (entity.key, entity)
         #     for entity in entity_by_key_plural.itervalues()
         #     )
         # for entity in entity_by_key_plural.itervalues():
@@ -123,7 +123,7 @@ class Simulation(object):
             for key_plural, entity in self.entity_by_key_plural.iteritems()
             )
         new_dict['entity_by_key_singular'] = dict(
-            (entity.key_singular, entity)
+            (entity.key, entity)
             for entity in entity_by_key_plural.itervalues()
             )
         new_dict['holder_by_name'] = {

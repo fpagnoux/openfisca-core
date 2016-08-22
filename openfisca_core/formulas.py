@@ -364,7 +364,7 @@ class PersonToEntity(AbstractEntityToEntity):
                 target_array[entity_index_array[boolean_filter]] = array[boolean_filter]
             except:
                 log.error(u'An error occurred while filtering array for role {}[{}] in function {}'.format(
-                    entity.key_singular, role, holder.column.name))
+                    entity.key, role, holder.column.name))
                 raise
         else:
             operation = self.operation
@@ -471,7 +471,7 @@ class SimpleFormula(AbstractFormula):
                 target_array[boolean_filter] = array[entity_index_array[boolean_filter]]
             except:
                 log.error(u'An error occurred while transforming array for role {}[{}] in function {}'.format(
-                    entity.key_singular, role, holder.column.name))
+                    entity.key, role, holder.column.name))
                 raise
         return target_array
 
@@ -602,7 +602,7 @@ class SimpleFormula(AbstractFormula):
         assert array.size == entity_count, \
             u"Function {}@{}<{}>() --> <{}>{} returns an array of size {}, but size {} is expected for {}".format(
                 column.name, entity.key, str(period), str(output_period), stringify_array(array),
-                array.size, entity_count, entity.key_singular).encode('utf-8')
+                array.size, entity_count, entity.key).encode('utf-8')
         if debug:
             try:
                 # cf http://stackoverflow.com/questions/6736590/fast-check-for-nan-in-numpy
@@ -684,7 +684,7 @@ class SimpleFormula(AbstractFormula):
             target_array[entity_index_array[boolean_filter]] = array[boolean_filter]
         except:
             log.error(u'An error occurred while filtering array for role {}[{}] in function {}'.format(
-                entity.key_singular, role, holder.column.name))
+                entity.key, role, holder.column.name))
             raise
         return target_array
 
@@ -745,7 +745,7 @@ class SimpleFormula(AbstractFormula):
                 target_array[entity_index_array[boolean_filter]] = array[boolean_filter]
             except:
                 log.error(u'An error occurred while filtering array for role {}[{}] in function {}'.format(
-                    entity.key_singular, role, holder.column.name))
+                    entity.key, role, holder.column.name))
                 raise
         return target_array_by_role
 

@@ -368,9 +368,21 @@ class Simulation(object):
         input_projected = self.project_on_first_person(array, entity = origin_entity)
         return self.sum_in_entity(input_projected, entity = target_entity)
 
-    def sum_in_entity(self, array, entity):
+    def sum_in_entity(self, array, entity, role = None):
+
         entity_index_array = self.get_entity_index_array(entity)
-        return np.bincount(entity_index_array, weights = array)
+        result = self.empty_array(entity)
+        if role is not None:
+            entity_role_array = self.get_entity_role_array(entity)
+            role_filter = (entity_role_array == role)
+
+            # Entities for which one person at least has the given role
+            entity_has_role_filter = np.bincount(entity_index_array, weights = role_filter) > 0
+
+            result[entity_has_role_filter] += np.bincount(entity_index_array[role_filter], weights = array[role_filter])
+        else:
+            result += np.bincount(entity_index_array, weights = array)
+        return result
 
     def project_on_persons(self, array, entity):
         entity_index_array = self.get_entity_index_array(entity)

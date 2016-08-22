@@ -385,5 +385,11 @@ class Simulation(object):
         entity_index_array = self.get_entity_index_array(entity)
         return array[entity_index_array]
 
+    def project_on_first_person(self, array, entity):
+        entity_position_array = self.get_entity_position_array(entity)
+        entity_index_array = self.get_entity_index_array(entity)
+        boolean_filter = (entity_position_array == 0)
+        return array[entity_index_array] * boolean_filter
+
     def empty_array(self, entity):
         return np.zeros(self.get_entity_count(entity))

@@ -338,18 +338,9 @@ class Simulation(object):
         return self.holder_by_name[position_column_name].array
 
     def transpose_to_entity(self, array, target_entity, origin_entity):
-        input_projected = self.project_on_persons(array, entity = origin_entity)
-        origin_entity_position_array = self.get_entity_position_array(origin_entity)
+        input_projected = self.project_on_first_person(array, entity = origin_entity)
+        return self.sum_in_entity(input_projected, entity = target_entity)
 
-        # We project the origin entity quantity on the first individu of this entity
-        boolean_filter = origin_entity_position_array == 0
-
-        target_entity_index_array = self.get_entity_index_array(target_entity)
-
-        result = self.empty_array(target_entity)
-        result[target_entity_index_array[boolean_filter]] = input_projected[boolean_filter]
-
-        return result
     def sum_in_entity(self, array, entity):
         entity_index_array = self.get_entity_index_array(entity)
         return np.bincount(entity_index_array, weights = array)

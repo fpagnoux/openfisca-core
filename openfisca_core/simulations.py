@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 
-import collections, warnings
+import collections
+import warnings
 
 import numpy as np
 
@@ -341,6 +342,8 @@ class Simulation(object):
         input_projected = self.project_on_first_person(array, entity = origin_entity)
         return self.sum_in_entity(input_projected, entity = target_entity)
 
+    #  Aggregation persons -> entity
+
     def sum_in_entity(self, array, entity, role = None):
 
         entity_index_array = self.get_entity_index_array(entity)
@@ -361,14 +364,12 @@ class Simulation(object):
         sum_in_entity = self.sum_in_entity(array, entity, role = role)
         return (sum_in_entity > 0)
 
-
     def reduce_in_entity(self, array, entity, reducer, neutral_element, role = None):
         position_in_entity = self.get_entity_position_array(entity)
         role_in_entity = self.get_role_in_entity(entity)
         role_filter = (role_in_entity == role) if role is not None else True
 
-
-        result = self.filled_array(entity, neutral_element) # Neutral value that will be returned if no one with the given role exists.
+        result = self.filled_array(entity, neutral_element)  # Neutral value that will be returned if no one with the given role exists.
 
         # We loop over the positions in the entity
         # Looping over the entities is tempting, but potentielly slow if there are a lot of entities
@@ -381,7 +382,8 @@ class Simulation(object):
         return result
 
     def all_in_entity(self, array, entity, role = None):
-        return self.reduce_in_entity(array, entity, neutral_element = True, reducer =  np.logical_and, role = role)
+
+        return self.reduce_in_entity(array, entity, neutral_element = True, reducer = np.logical_and, role = role)
 
     def max_in_entity(self, array, entity, role = None):
         return self.reduce_in_entity(array, entity, neutral_element = - np.infty, reducer = np.maximum, role = role)
@@ -389,7 +391,21 @@ class Simulation(object):
     def min_in_entity(self, array, entity, role = None):
         return self.reduce_in_entity(array, entity, neutral_element = np.infty, reducer = np.minimum, role = role)
 
-    def project_on_persons(self, array, entity):
+    # Projection person -> entity
+
+    def value_from_person(self, array, entity, role, default = 0):
+        # TODO: Make sure there is unique
+        result = self.filled_array(entity, default)
+        role_filter = (self.get_role_in_entity(entity) == role)
+        entity_filter = self.any_in_entity(role_filter, entity)
+
+        result[entity_filter] = array[role_filter]
+
+        return result
+
+    # Projection entity -> person(s)
+
+    def project_on_persons(self, array, entity):  # should take a role
         entity_index_array = self.get_entity_index_array(entity)
         return array[entity_index_array]
 
@@ -403,7 +419,6 @@ class Simulation(object):
         return np.zeros(self.get_entity_count(entity))
 
     def filled_array(self, entity, value):
-        with warnings.catch_warnings(): # Avoid a non-relevant warning
+        with warnings.catch_warnings():  # Avoid a non-relevant warning
             warnings.simplefilter("ignore")
             return np.full(self.get_entity_count(entity), value)
-

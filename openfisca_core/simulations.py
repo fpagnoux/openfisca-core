@@ -368,6 +368,8 @@ class Simulation(object):
         input_projected = self.project_on_first_person(array, entity = origin_entity)
         return self.sum_in_entity(input_projected, entity = target_entity)
 
+    # Aggregation persons -> entity
+
     def sum_in_entity(self, array, entity, role = None):
 
         entity_index_array = self.get_entity_index_array(entity)
@@ -387,7 +389,6 @@ class Simulation(object):
     def any_in_entity(self, array, entity, role = None):
         sum_in_entity = self.sum_in_entity(array, entity, role = role)
         return (sum_in_entity > 0)
-
 
     def reduce_in_entity(self, array, entity, reducer, neutral_element, role = None):
         position_in_entity = self.get_entity_position_array(entity)
@@ -416,7 +417,21 @@ class Simulation(object):
     def min_in_entity(self, array, entity, role = None):
         return self.reduce_in_entity(array, entity, neutral_element = np.infty, reducer = np.minimum, role = role)
 
-    def project_on_persons(self, array, entity):
+    # Projection person -> entity
+
+    def value_from_person(self, array, entity, role, default = 0):
+        # TODO: Make sure there is unique
+        result = self.filled_array(entity, default)
+        role_filter = (self.get_role_in_entity(entity) == role)
+        entity_filter = self.any_in_entity(role_filter, entity)
+
+        result[entity_filter] = array[role_filter]
+
+        return result
+
+    # Projection entity -> person(s)
+
+    def project_on_persons(self, array, entity): # should take a role
         entity_index_array = self.get_entity_index_array(entity)
         return array[entity_index_array]
 

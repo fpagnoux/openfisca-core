@@ -368,9 +368,7 @@ class Simulation(object):
         role_filter = (role_in_entity == role) if role is not None else True
 
 
-        with warnings.catch_warnings(): # Avoid a non-relevant warning
-            warnings.simplefilter("ignore")
-            result = np.full(self.get_entity_count(entity), neutral_element) # Neutral value that will be returned if no one with the given role exists.
+        result = self.filled_array(entity, neutral_element) # Neutral value that will be returned if no one with the given role exists.
 
         # We loop over the positions in the entity
         # Looping over the entities is tempting, but potentielly slow if there are a lot of entities
@@ -403,3 +401,9 @@ class Simulation(object):
 
     def empty_array(self, entity):
         return np.zeros(self.get_entity_count(entity))
+
+    def filled_array(self, entity, value):
+        with warnings.catch_warnings(): # Avoid a non-relevant warning
+            warnings.simplefilter("ignore")
+            return np.full(self.get_entity_count(entity), value)
+

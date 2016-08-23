@@ -388,6 +388,16 @@ class Simulation(object):
         sum_in_entity = self.sum_in_entity(array, entity, role = role)
         return (sum_in_entity > 0)
 
+    def max_in_entity(self, array, entity, role = None):
+        position_in_entity = self.get_entity_position_array(entity)
+
+        # We loop over the positions in the entity
+        # Looping over the entities is tempting, but potentielly slow if there are a lot of entities
+        nb_positions = np.max(position_in_entity) + 1
+        array_filtered_by_positions = map(lambda p: (position_in_entity == p) * array, range(nb_positions))
+        sum_by_positions = map(lambda a: self.sum_in_entity(a, entity = entity, role = role), array_filtered_by_positions)
+        return np.maximum.reduce(sum_by_positions)
+
     def project_on_persons(self, array, entity):
         entity_index_array = self.get_entity_index_array(entity)
         return array[entity_index_array]

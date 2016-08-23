@@ -357,6 +357,10 @@ class Simulation(object):
             result += np.bincount(entity_index_array, weights = array)
         return result
 
+    def any_in_entity(self, array, entity, role = None):
+        sum_in_entity = self.sum_in_entity(array, entity, role = role)
+        return (sum_in_entity > 0)
+
     def project_on_persons(self, array, entity):
         entity_index_array = self.get_entity_index_array(entity)
         return array[entity_index_array]

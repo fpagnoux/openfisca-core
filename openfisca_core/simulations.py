@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-import collections
+import collections, warnings
 
 import numpy as np
 
@@ -361,15 +361,35 @@ class Simulation(object):
         sum_in_entity = self.sum_in_entity(array, entity, role = role)
         return (sum_in_entity > 0)
 
-    def max_in_entity(self, array, entity, role = None):
+
+    def reduce_in_entity(self, array, entity, reducer, neutral_element, role = None):
         position_in_entity = self.get_entity_position_array(entity)
+        role_in_entity = self.get_role_in_entity(entity)
+        role_filter = (role_in_entity == role) if role is not None else True
+
+
+        with warnings.catch_warnings(): # Avoid a non-relevant warning
+            warnings.simplefilter("ignore")
+            result = np.full(self.get_entity_count(entity), neutral_element) # Neutral value that will be returned if no one with the given role exists.
 
         # We loop over the positions in the entity
         # Looping over the entities is tempting, but potentielly slow if there are a lot of entities
         nb_positions = np.max(position_in_entity) + 1
-        array_filtered_by_positions = map(lambda p: (position_in_entity == p) * array, range(nb_positions))
-        sum_by_positions = map(lambda a: self.sum_in_entity(a, entity = entity, role = role), array_filtered_by_positions)
-        return np.maximum.reduce(sum_by_positions)
+        for p in range(nb_positions):
+            filter = (position_in_entity == p) * role_filter
+            entity_filter = self.any_in_entity(filter, entity)
+            result[entity_filter] = reducer(result[entity_filter], array[filter])
+
+        return result
+
+    def all_in_entity(self, array, entity, role = None):
+        return self.reduce_in_entity(array, entity, neutral_element = True, reducer =  np.logical_and, role = role)
+
+    def max_in_entity(self, array, entity, role = None):
+        return self.reduce_in_entity(array, entity, neutral_element = - np.infty, reducer = np.maximum, role = role)
+
+    def min_in_entity(self, array, entity, role = None):
+        return self.reduce_in_entity(array, entity, neutral_element = np.infty, reducer = np.minimum, role = role)
 
     def project_on_persons(self, array, entity):
         entity_index_array = self.get_entity_index_array(entity)

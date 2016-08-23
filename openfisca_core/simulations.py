@@ -327,7 +327,7 @@ class Simulation(object):
         index_column_name = tbs.get_entity_index_column_name(entity)
         return self.holder_by_name[index_column_name].array
 
-    def get_entity_role_array(self, entity):
+    def get_role_in_entity(self, entity):
         tbs = self.tax_benefit_system
         role_column_name = tbs.get_entity_role_column_name(entity)
         return self.holder_by_name[role_column_name].array
@@ -346,7 +346,7 @@ class Simulation(object):
         entity_index_array = self.get_entity_index_array(entity)
         result = self.empty_array(entity)
         if role is not None:
-            entity_role_array = self.get_entity_role_array(entity)
+            entity_role_array = self.get_role_in_entity(entity)
             role_filter = (entity_role_array == role)
 
             # Entities for which one person at least has the given role

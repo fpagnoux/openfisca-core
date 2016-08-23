@@ -322,7 +322,7 @@ class EntityToPerson(AbstractEntityToEntity):
         if roles is None:
             roles = entity.roles
 
-        boolean_filters = [simulation.get_entity_role_array(entity) == role for role in roles]
+        boolean_filters = [simulation.get_role_in_entity(entity) == role for role in roles]
         boolean_filter = np.logical_or.reduce(boolean_filters)
         try:
             target_array[boolean_filter] = array[entity_index_array[boolean_filter]]
@@ -359,7 +359,7 @@ class PersonToEntity(AbstractEntityToEntity):
                 holder.column.name)
             role = roles[0]
             # TODO: Cache filter.
-            boolean_filter = simulation.get_entity_role_array(entity) == role
+            boolean_filter = simulation.get_role_in_entity(entity) == role
             try:
                 target_array[entity_index_array[boolean_filter]] = array[boolean_filter]
             except:
@@ -374,7 +374,7 @@ class PersonToEntity(AbstractEntityToEntity):
             if roles is None:
                 roles = entity.roles
 
-            boolean_filters = [simulation.get_entity_role_array(entity) == role for role in roles]
+            boolean_filters = [simulation.get_role_in_entity(entity) == role for role in roles]
             boolean_filter = np.logical_or.reduce(boolean_filters)
 
             target_array = np.bincount(entity_index_array[boolean_filter], weights = array[boolean_filter])

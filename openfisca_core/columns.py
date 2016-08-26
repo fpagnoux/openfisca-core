@@ -375,12 +375,13 @@ class AgeCol(IntCol):
             )
 
 
-class EnumCol(StrCol):
+class EnumCol(IntCol):
     '''
     A column of integer with an enum
     '''
-    dtype = object
+    dtype = np.int16
     enum = None
+    index_by_slug = None
     is_period_size_independent = True
     json_type = 'Enumeration'
 
@@ -395,36 +396,63 @@ class EnumCol(StrCol):
     @property
     def input_to_dated_python(self):
         enum = self.enum
-
-        index_by_slug = dict(
-            (strings.slugify(name), index)
-            for index, name in sorted(enum._vars.iteritems())
+        if enum is None:
+            return conv.input_to_int
+        # This converters accepts either an item number or an item name.
+        index_by_slug = self.index_by_slug
+        if index_by_slug is None:
+            self.index_by_slug = index_by_slug = dict(
+                (strings.slugify(name), index)
+                for index, name in sorted(enum._vars.iteritems())
+                )
+        return conv.condition(
+            conv.input_to_int,
+            conv.pipe(
+                # Verify that item index belongs to enumeration.
+                conv.input_to_int,
+                conv.test_in(enum._vars),
+                ),
+            conv.pipe(
+                # Convert item name to its index.
+                conv.input_to_slug,
+                conv.test_in(index_by_slug),
+                conv.function(lambda slug: index_by_slug[slug]),
+                ),
             )
-
-        return conv.pipe(
-            # Convert item name to its index.
-            conv.input_to_slug,
-            conv.test_in(index_by_slug),
-            ),
 
     def json_default(self):
         return unicode(self.default) if self.default is not None else None
 
     @property
     def json_to_dated_python(self):
-
         enum = self.enum
-
-        index_by_slug = dict(
-            (strings.slugify(name), index)
-            for index, name in sorted(enum._vars.iteritems())
-            )
+        if enum is None:
+            return conv.pipe(
+                conv.test_isinstance((basestring, int)),
+                conv.anything_to_int,
+                )
+        # This converters accepts either an item number or an item name.
+        index_by_slug = self.index_by_slug
+        if index_by_slug is None:
+            self.index_by_slug = index_by_slug = dict(
+                (strings.slugify(name), index)
+                for index, name in sorted(enum._vars.iteritems())
+                )
         return conv.pipe(
-            conv.test_isinstance(basestring),
-            conv.pipe(
-                # Convert item name to its index.
-                conv.input_to_slug,
-                conv.test_in(index_by_slug),
+            conv.test_isinstance((basestring, int)),
+            conv.condition(
+                conv.anything_to_int,
+                conv.pipe(
+                    # Verify that item index belongs to enumeration.
+                    conv.anything_to_int,
+                    conv.test_in(enum._vars),
+                    ),
+                conv.pipe(
+                    # Convert item name to its index.
+                    conv.input_to_slug,
+                    conv.test_in(index_by_slug),
+                    conv.function(lambda slug: index_by_slug[slug]),
+                    ),
                 ),
             )
 

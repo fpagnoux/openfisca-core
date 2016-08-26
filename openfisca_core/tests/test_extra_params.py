@@ -11,7 +11,7 @@ from openfisca_core.tools import assert_near
 
 class formula_1(Variable):
     column = IntCol
-    entity_class = Individus
+    entity = Individus
 
     def function(self, simulation, period):
         return period, simulation.calculate('formula_3', period, extra_params = [0])
@@ -19,7 +19,7 @@ class formula_1(Variable):
 
 class formula_2(Variable):
     column = IntCol
-    entity_class = Individus
+    entity = Individus
 
     def function(self, simulation, period):
         return period, simulation.calculate('formula_3', period, extra_params = [1])
@@ -27,7 +27,7 @@ class formula_2(Variable):
 
 class formula_3(Variable):
     column = IntCol
-    entity_class = Individus
+    entity = Individus
 
     def function(self, simulation, period, choice):
         if choice == 0:

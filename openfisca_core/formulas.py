@@ -249,7 +249,7 @@ class SimpleFormula(AbstractFormula):
 
                 assert entity == array_or_dated_holder.entity, \
                     u"""Holder entity "{}" and given entity "{}" don't match""".format(entity.key,
-                        array_or_dated_holder.column.entity_class.key).encode('utf-8')
+                        array_or_dated_holder.column.entity.key).encode('utf-8')
             array = array_or_dated_holder.array
             if default is None:
                 default = array_or_dated_holder.column.default
@@ -344,7 +344,7 @@ class SimpleFormula(AbstractFormula):
         assert period is not None
         holder = self.holder
         column = holder.column
-        entity = holder.column.entity_class
+        entity = holder.column.entity
         simulation = holder.simulation
         debug = simulation.debug
         debug_all = simulation.debug_all
@@ -663,7 +663,7 @@ def neutralize_column(column):
     """Return a new neutralized column (to be used by reforms)."""
     return new_filled_column(
         base_function = requested_period_default_value_neutralized,
-        entity_class = column.entity_class,
+        entity = column.entity,
         label = u'[Neutralized]' if column.label is None else u'[Neutralized] {}'.format(column.label),
         reference_column = column,
         set_input = set_input_neutralized,
@@ -672,7 +672,7 @@ def neutralize_column(column):
 
 def new_filled_column(base_function = UnboundLocalError, calculate_output = UnboundLocalError,
         cerfa_field = UnboundLocalError, column = UnboundLocalError, comments = UnboundLocalError, doc = None,
-        entity_class = UnboundLocalError, formula_class = UnboundLocalError, is_permanent = UnboundLocalError,
+        entity = UnboundLocalError, formula_class = UnboundLocalError, is_permanent = UnboundLocalError,
         label = UnboundLocalError, law_reference = UnboundLocalError, line_number = UnboundLocalError, module = None,
         name = None, reference_column = None, set_input = UnboundLocalError, source_code = UnboundLocalError,
         source_file_path = UnboundLocalError, start_date = UnboundLocalError, stop_date = UnboundLocalError,
@@ -709,12 +709,12 @@ def new_filled_column(base_function = UnboundLocalError, calculate_output = Unbo
     elif isinstance(comments, str):
         comments = comments.decode('utf-8')
 
-    assert entity_class is not None, """Missing attribute "entity_class" in definition of filled column {}""".format(
+    assert entity is not None, """Missing attribute "entity" in definition of filled column {}""".format(
         name)
-    if entity_class is UnboundLocalError:
+    if entity is UnboundLocalError:
         assert reference_column is not None, \
-            """Missing attribute "entity_class" in definition of filled column {}""".format(name)
-        entity_class = reference_column.entity_class
+            """Missing attribute "entity" in definition of filled column {}""".format(name)
+        entity = reference_column.entity
 
     assert formula_class is not None, """Missing attribute "formula_class" in definition of filled column {}""".format(
         name)
@@ -897,7 +897,7 @@ def new_filled_column(base_function = UnboundLocalError, calculate_output = Unbo
         column.cerfa_field = cerfa_field
     if stop_date is not None:
         column.end = stop_date
-    column.entity_class = entity_class
+    column.entity = entity
     column.formula_class = formula_class
     if is_permanent:
         column.is_permanent = True

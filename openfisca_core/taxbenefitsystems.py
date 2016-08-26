@@ -30,7 +30,7 @@ class VariableNameConflict(Exception):
 class TaxBenefitSystem(object):
     _base_tax_benefit_system = None
     compact_legislation_by_instant_cache = None
-    entity_class_by_key_plural = None
+    entity_by_key_plural = None
     person_key_plural = None
     preprocess_legislation = None
     json_to_attributes = staticmethod(conv.pipe(
@@ -54,9 +54,9 @@ class TaxBenefitSystem(object):
         self.build_entities(entities)
         if entities is None or len(entities) == 0:
             raise Exception("A tax benefit sytem must have at least an entity.")
-        # self.entity_class_by_key_plural = {
-        #     entity_class.key_plural: entity_class
-        #     for entity_class in entities
+        # self.entity_by_key_plural = {
+        #     entity.key_plural: entity
+        #     for entity in entities
         #     }
 
     def build_entities(self, entities):
@@ -66,27 +66,27 @@ class TaxBenefitSystem(object):
         self.person_entity = entities[0]
         other_entities = entities[1:]
 
-        for entity_class in other_entities:
+        for entity in other_entities:
 
             id_column = new_filled_column(
-                name = u"id_{}".format(entity_class.key),
-                entity_class = self.person_entity,
+                name = u"id_{}".format(entity.key),
+                entity = self.person_entity,
                 column = IntCol,
                 is_permanent = True,
                 formula_class = SimpleFormula
                 )
 
             role_column = new_filled_column(
-                name = u"role_in_{}".format(entity_class.key),
-                entity_class = self.person_entity,
-                column = EnumCol(enum = entity_class.get_role_enum()),
+                name = u"role_in_{}".format(entity.key),
+                entity = self.person_entity,
+                column = EnumCol(enum = entity.get_role_enum()),
                 is_permanent = True,
                 formula_class = SimpleFormula
                 )
 
             position_column = new_filled_column(
-                name = u"position_in_{}".format(entity_class.key),
-                entity_class = self.person_entity,
+                name = u"position_in_{}".format(entity.key),
+                entity = self.person_entity,
                 column = IntCol,
                 is_permanent = True,
                 formula_class = SimpleFormula

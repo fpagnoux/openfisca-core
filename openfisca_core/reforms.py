@@ -23,7 +23,7 @@ class Reform(TaxBenefitSystem):
     name = None
 
     def __init__(self, reference):
-        self.entity_class_by_key_plural = reference.entity_class_by_key_plural
+        self.entity_by_key_plural = reference.entity_by_key_plural
         self._legislation_json = reference.get_legislation()
         self.compact_legislation_by_instant_cache = reference.compact_legislation_by_instant_cache
         self.column_by_name = reference.column_by_name.copy()

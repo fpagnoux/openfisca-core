@@ -125,7 +125,7 @@ class Scenario(AbstractScenario):
                                         (
                                             (column.name, column.json_to_python)
                                             for column in column_by_name.itervalues()
-                                            if column.entity_class == Familles
+                                            if column.entity == Familles
                                             ),
                                         )),
                                     drop_none_values = True,
@@ -154,7 +154,7 @@ class Scenario(AbstractScenario):
                                         (
                                             (column.name, column.json_to_python)
                                             for column in column_by_name.itervalues()
-                                            if column.entity_class == Individus
+                                            if column.entity == Individus
                                             ),
                                         )),
                                     drop_none_values = True,

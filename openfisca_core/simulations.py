@@ -309,7 +309,7 @@ class Simulation(object):
 
     def get_variable_entity(self, variable_name):
         column = self.tax_benefit_system.get_column(variable_name, check_existence = True)
-        return column.entity_class
+        return column.entity
 
     def set_entity_count(self, entity, count):
         self.entity_count[entity.key]['count'] = count

@@ -26,7 +26,7 @@ class Column(object):
     default = 0
     dtype = float
     end = None
-    entity_class = None
+    entity = None
     formula_class = None
     is_period_size_independent = False  # When True, value of column doesn't depend from size of period (example: age)
     is_permanent = False  # When True, value of column doesn't depend from time (example: ID, birth)
@@ -141,7 +141,7 @@ class Column(object):
                 end = end.isoformat()
             self_json['end'] = end
         if self.entity is not None:
-            self_json['entity'] = self.entity_class.key
+            self_json['entity'] = self.entity.key
         if self.label is not None:
             self_json['label'] = self.label
         line_number = self.formula_class.line_number

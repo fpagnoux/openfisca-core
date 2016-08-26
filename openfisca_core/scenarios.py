@@ -155,7 +155,7 @@ class AbstractScenario(object):
                     entity.roles_count = len(np.unique(person_entity_role_array))
 
                 for variable_name, column in tbs.column_by_name.iteritems():
-                    if column.entity_class == entity and variable_name in used_columns_name:
+                    if column.entity == entity and variable_name in used_columns_name:
                         variable_periods = set()
                         for cell in (
                                 entity_member.get(variable_name)
@@ -309,22 +309,22 @@ class AbstractScenario(object):
                 for parallel_axes_index, parallel_axes in enumerate(data['axes']):
                     first_axis = parallel_axes[0]
                     axis_count = first_axis['count']
-                    axis_entity_key = tbs.get_column(first_axis['name']).entity_class.key
+                    axis_entity_key = tbs.get_column(first_axis['name']).entity.key
                     first_axis_period = first_axis['period'] or data['period']
                     for axis_index, axis in enumerate(parallel_axes):
                         if axis['min'] >= axis['max']:
                             errors.setdefault('axes', {}).setdefault(parallel_axes_index, {}).setdefault(
                                 axis_index, {})['max'] = state._(u"Max value must be greater than min value")
                         column = tbs.get_column(axis['name'])
-                        if axis['index'] >= len(data['test_case'][column.entity_class.key]):
+                        if axis['index'] >= len(data['test_case'][column.entity.key]):
                             errors.setdefault('axes', {}).setdefault(parallel_axes_index, {}).setdefault(
                                 axis_index, {})['index'] = state._(u"Index must be lower than {}").format(
-                                    len(data['test_case'][column.entity_class.key]))
+                                    len(data['test_case'][column.entity.key]))
                         if axis_index > 0:
                             if axis['count'] != axis_count:
                                 errors.setdefault('axes', {}).setdefault(parallel_axes_index, {}).setdefault(
                                     axis_index, {})['count'] = state._(u"Parallel indexes must have the same count")
-                            if column.entity_class.key != axis_entity_key:
+                            if column.entity.key != axis_entity_key:
                                 errors.setdefault('axes', {}).setdefault(parallel_axes_index, {}).setdefault(
                                     axis_index, {})['period'] = state._(
                                         u"Parallel indexes must belong to the same entity")
@@ -523,7 +523,7 @@ def make_json_or_python_to_input_variables(tax_benefit_system, period):
         errors = {}
         for variable_name, array_by_period in input_variables.iteritems():
             column = tax_benefit_system.get_column(variable_name)
-            entity_key = column.entity_class.key
+            entity_key = column.entity.key
             entity_count = count_by_entity_key.get(entity_key, 0)
             for variable_period, variable_array in array_by_period.iteritems():
                 if entity_count == 0:
@@ -597,11 +597,11 @@ def make_json_or_python_to_test(tax_benefit_system, default_absolute_error_margi
                     ),
                 ).iteritems(),
             (
-                (entity_class.key, conv.pipe(
+                (entity.key, conv.pipe(
                     conv.make_item_to_singleton(),
                     conv.test_isinstance(list),
                     ))
-                for entity_class in tax_benefit_system.entity_class_by_key_plural.itervalues()
+                for entity in tax_benefit_system.entity_by_key_plural.itervalues()
                 ),
             )),
         )

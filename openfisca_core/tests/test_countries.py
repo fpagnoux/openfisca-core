@@ -19,26 +19,26 @@ from openfisca_core.tools import assert_near
 
 class age_en_mois(Variable):
     column = IntCol
-    entity_class = Individus
+    entity = Individus
     label = u"Âge (en nombre de mois)"
 
 
 class birth(Variable):
     column = DateCol
-    entity_class = Individus
+    entity = Individus
     label = u"Date de naissance"
 
 
 class depcom(Variable):
     column = FixedStrCol(max_length = 5)
-    entity_class = Familles
+    entity = Familles
     is_permanent = True
     label = u"""Code INSEE "depcom" de la commune de résidence de la famille"""
 
 
 class salaire_brut(Variable):
     column = FloatCol
-    entity_class = Individus
+    entity = Individus
     label = "Salaire brut"
     set_input = set_input_divide_by_period
 
@@ -47,7 +47,7 @@ class salaire_brut(Variable):
 
 class age(Variable):
     column = IntCol
-    entity_class = Individus
+    entity = Individus
     label = u"Âge (en nombre d'années)"
 
     def function(self, simulation, period):
@@ -62,7 +62,7 @@ class age(Variable):
 
 class dom_tom(Variable):
     column = BoolCol
-    entity_class = Familles
+    entity = Familles
     label = u"La famille habite-t-elle les DOM-TOM ?"
 
     def function(self, simulation, period):
@@ -74,7 +74,7 @@ class dom_tom(Variable):
 
 class revenu_disponible(Variable):
     column = FloatCol
-    entity_class = Individus
+    entity = Individus
     label = u"Revenu disponible de l'individu"
 
     def function(self, simulation, period):
@@ -87,7 +87,7 @@ class revenu_disponible(Variable):
 
 class revenu_disponible_famille(Variable):
     column = FloatCol
-    entity_class = Familles
+    entity = Familles
     label = u"Revenu disponible de la famille"
 
     def function(self, simulation, period):
@@ -97,7 +97,7 @@ class revenu_disponible_famille(Variable):
 
 class rsa(DatedVariable):
     column = FloatCol
-    entity_class = Individus
+    entity = Individus
     label = u"RSA"
 
     @dated_function(datetime.date(2010, 1, 1))
@@ -124,7 +124,7 @@ class rsa(DatedVariable):
 
 class salaire_imposable(Variable):
     column = FloatCol
-    entity_class = Individus
+    entity = Individus
     label = u"Salaire imposable"
 
     def function(self, simulation, period):
@@ -138,7 +138,7 @@ class salaire_imposable(Variable):
 
 class salaire_net(Variable):
     column = FloatCol
-    entity_class = Individus
+    entity = Individus
     label = u"Salaire net"
 
     def function(self, simulation, period):

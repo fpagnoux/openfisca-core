@@ -30,22 +30,22 @@ class AbstractVariable(object):
 
     def to_column(self, tax_benefit_system):
         formula_class = self.__class__.formula_class
-        entity_class = self.attributes.pop('entity_class', None)
+        entity = self.attributes.pop('entity', None)
 
         # For reform variable that replaces the existing reference one
         reference = self.attributes.pop('reference', None)
         if reference:
-            if not entity_class:
-                entity_class = reference.entity_class
+            if not entity:
+                entity = reference.entity
 
         (comments, source_file_path, source_code, line_number) = self.introspect()
 
-        if entity_class is None:
-            raise Exception('Variable {} must have an entity_class'.format(self.name))
+        if entity is None:
+            raise Exception('Variable {} must have an entity'.format(self.name))
 
         return new_filled_column(
             name = self.name,
-            entity_class = entity_class,
+            entity = entity,
             formula_class = formula_class,
             reference_column = reference,
             comments = comments,

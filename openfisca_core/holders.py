@@ -61,7 +61,7 @@ class Holder(object):
         assert column is not None
         assert self.column is None
         self.column = column
-        self.entity = column.entity_class
+        self.entity = column.entity
         self.simulation = simulation
 
     @property
@@ -400,7 +400,7 @@ class Holder(object):
         return value_json
 
     def default_array(self):
-        array_size = self.simulation.get_entity_count(self.column.entity_class)
+        array_size = self.simulation.get_entity_count(self.column.entity)
         array = np.empty(array_size, dtype = self.column.dtype)
         array.fill(self.column.default)
         return array

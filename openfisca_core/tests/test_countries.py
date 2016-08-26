@@ -8,7 +8,7 @@ from nose.tools import raises
 
 from openfisca_core.columns import BoolCol, DateCol, FixedStrCol, FloatCol, IntCol
 from openfisca_core.formulas import dated_function, set_input_divide_by_period
-from openfisca_core.variables import Variable, EntityToPersonColumn, DatedVariable, PersonToEntityColumn
+from openfisca_core.variables import Variable, DatedVariable
 from openfisca_core.taxbenefitsystems import VariableNameConflict, VariableNotFound
 from openfisca_core import periods
 from dummy_country import Familles, Individus, DummyTaxBenefitSystem
@@ -72,12 +72,6 @@ class dom_tom(Variable):
         return period, np.logical_or(startswith(depcom, '97'), startswith(depcom, '98'))
 
 
-class dom_tom_individu(EntityToPersonColumn):
-    entity_class = Individus
-    label = u"La personne habite-t-elle les DOM-TOM ?"
-    variable = dom_tom
-
-
 class revenu_disponible(Variable):
     column = FloatCol
     entity_class = Individus
@@ -91,11 +85,14 @@ class revenu_disponible(Variable):
         return period, rsa + salaire_imposable * 0.7
 
 
-class revenu_disponible_famille(PersonToEntityColumn):
+class revenu_disponible_famille(Variable):
+    column = FloatCol
     entity_class = Familles
     label = u"Revenu disponible de la famille"
-    operation = 'add'
-    variable = revenu_disponible
+
+    def function(self, simulation, period):
+        revenu_disponible_individus = simulation.calculate('revenu_disponible', period)
+        return period, simulation.sum_in_entity(revenu_disponible_individus, entity = Familles)
 
 
 class rsa(DatedVariable):
@@ -132,7 +129,8 @@ class salaire_imposable(Variable):
 
     def function(self, simulation, period):
         period = period.start.period(u'year').offset('first-of')
-        dom_tom_individu = simulation.calculate('dom_tom_individu', period)
+        dom_tom_famille = simulation.calculate('dom_tom', period)
+        dom_tom_individu = simulation.project_on_persons(dom_tom_famille, entity = Familles)
         salaire_net = simulation.calculate('salaire_net', period)
 
         return period, salaire_net * 0.9 - 100 * dom_tom_individu
@@ -155,8 +153,7 @@ class TestTaxBenefitSystem(DummyTaxBenefitSystem):
         DummyTaxBenefitSystem.__init__(self)
 
         # We cannot automatically import all the variable from this file, there would be an import loop
-        self.add_variables(age_en_mois, birth, depcom, salaire_brut, age, dom_tom, dom_tom_individu,
-            revenu_disponible_famille, revenu_disponible, rsa, salaire_imposable, salaire_net)
+        self.add_variables(age_en_mois, birth, depcom, salaire_brut, age, dom_tom, revenu_disponible, revenu_disponible_famille, rsa, salaire_imposable, salaire_net)
 
 tax_benefit_system = TestTaxBenefitSystem()
 

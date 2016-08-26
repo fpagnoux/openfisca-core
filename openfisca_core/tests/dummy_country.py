@@ -20,15 +20,17 @@ TEST_DIRECTORY = path.dirname(path.abspath(__file__))
 Familles = Entity(
     key = "familles",
     label = u'Famille',
-    roles = {
-        'enfants': {
-            'label': u'Enfants'
-            },
-        'parents': {
+    roles = [
+        {
+            'key': 'parents',
             'label': u'Parents',
             'max': 2
+            },
+        {
+            'key': 'enfants',
+            'label': u'Enfants'
             }
-        }
+        ]
     )
 
 Individus = Entity(

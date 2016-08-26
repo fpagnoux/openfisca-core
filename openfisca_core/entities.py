@@ -14,7 +14,9 @@ class Entity(object):
     def iter_member_persons_role_and_id(self, member):
         # one by one, yield individu_position, individu_role, individu_id
         index_in_entity = 0
-        for role_name, role in self.roles.iteritems():
+        role_index = 0
+        for role in self.roles:
+            role_name = role['key']
             individus = member[role_name]
             if individus is not None:
                 if type(individus) == str:
@@ -26,10 +28,12 @@ class Entity(object):
                     for individu in individus:
                         yield index_in_entity, subroles[index_in_subrole], individu
                         index_in_subrole += 1
+                        role_index += 1
                 else:
                     for individu in individus:
-                        yield index_in_entity, role_name, individu
+                        yield index_in_entity, role_index, individu
                         index_in_entity += 1
+            role_index += 1
 
     def get_role_enum(self):
-        return Enum(self.roles.keys())
+        return Enum(map(lambda role: role['key'], self.roles))

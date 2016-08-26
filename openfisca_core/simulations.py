@@ -323,7 +323,7 @@ class Simulation(object):
     def get_entity_count(self, entity):
         return self.entity_count[entity.key]['count']
 
-    def get_entity_index_array(self, entity):
+    def get_entity_id(self, entity):
         tbs = self.tax_benefit_system
         index_column_name = tbs.get_entity_index_column_name(entity)
         return self.holder_by_name[index_column_name].array
@@ -333,7 +333,7 @@ class Simulation(object):
         role_column_name = tbs.get_entity_role_column_name(entity)
         return self.holder_by_name[role_column_name].array
 
-    def get_entity_position_array(self, entity):
+    def get_position_in_entity(self, entity):
         tbs = self.tax_benefit_system
         position_column_name = tbs.get_entity_position_column_name(entity)
         return self.holder_by_name[position_column_name].array
@@ -346,7 +346,7 @@ class Simulation(object):
 
     def sum_in_entity(self, array, entity, role = None):
 
-        entity_index_array = self.get_entity_index_array(entity)
+        entity_index_array = self.get_entity_id(entity)
         result = self.empty_array(entity)
         if role is not None:
             entity_role_array = self.get_role_in_entity(entity)
@@ -365,7 +365,7 @@ class Simulation(object):
         return (sum_in_entity > 0)
 
     def reduce_in_entity(self, array, entity, reducer, neutral_element, role = None):
-        position_in_entity = self.get_entity_position_array(entity)
+        position_in_entity = self.get_position_in_entity(entity)
         role_in_entity = self.get_role_in_entity(entity)
         role_filter = (role_in_entity == role) if role is not None else True
 
@@ -406,12 +406,12 @@ class Simulation(object):
     # Projection entity -> person(s)
 
     def project_on_persons(self, array, entity):  # should take a role
-        entity_index_array = self.get_entity_index_array(entity)
+        entity_index_array = self.get_entity_id(entity)
         return array[entity_index_array]
 
     def project_on_first_person(self, array, entity):
-        entity_position_array = self.get_entity_position_array(entity)
-        entity_index_array = self.get_entity_index_array(entity)
+        entity_position_array = self.get_position_in_entity(entity)
+        entity_index_array = self.get_entity_id(entity)
         boolean_filter = (entity_position_array == 0)
         return array[entity_index_array] * boolean_filter
 

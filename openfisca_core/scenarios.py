@@ -144,7 +144,7 @@ class AbstractScenario(object):
                         )
 
                     for member_index, member in enumerate(test_case[entity.key]):
-                        for person_position, person_role, person_id in entity.iter_member_persons_role_and_id(member):
+                        for person_position, person_role, person_id in iter_over_entity_members(entity, member):
                             person_index = person_index_by_id[person_id]
                             for step_index in range(steps_count):
                                 individu_index = step_index * persons_step_size + person_index
@@ -687,3 +687,28 @@ def set_entities_json_id(entities_json):
         if 'id' not in entity_json:
             entity_json['id'] = index
     return entities_json
+
+def iter_over_entity_members(entity_description, scenario_entity):
+        # One by one, yield individu_position, individu_role, individu_id
+        index_in_entity = 0
+        role_index = 0
+        role_in_scenario_indexes = {}
+
+        for role in entity_description.roles:
+            if role.get('role_in_scenario'):
+                role_name = role['role_in_scenario']
+                index = role_in_scenario_indexes.get(role_name) or 0
+                role_in_scenario_indexes[role_name] = index + 1
+                individus = (len(scenario_entity[role_name]) > index) and scenario_entity[role_name][index]
+            else:
+                role_name = role['key']
+                individus = scenario_entity[role_name]
+
+            if individus:
+                if type(individus) == str:
+                    individus = [individus]
+
+                for individu in individus:
+                    yield index_in_entity, role_index, individu
+                    index_in_entity += 1
+            role_index += 1

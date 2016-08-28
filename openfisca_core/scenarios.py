@@ -113,6 +113,7 @@ class AbstractScenario(object):
             for entity in simulation.tax_benefit_system.entities:
                 entity_index_column_name = self.tax_benefit_system.get_entity_index_column_name(entity)
                 entity_role_column_name = self.tax_benefit_system.get_entity_role_column_name(entity)
+                entity_legacy_role_column_name = self.tax_benefit_system.get_entity_legacy_role_column_name(entity)
                 entity_position_column_name = self.tax_benefit_system.get_entity_position_column_name(entity)
 
                 used_columns_name = set(
@@ -122,6 +123,7 @@ class AbstractScenario(object):
                     if value is not None and key not in (
                         entity_index_column_name,
                         entity_role_column_name,
+                        entity_legacy_role_column_name,
                         entity_position_column_name,
                         ) and key not in variables_name_to_skip
                     )
@@ -130,29 +132,35 @@ class AbstractScenario(object):
 
                     entity_step_size = simulation.get_entity_step_size(entity)
 
-                    simulation.get_or_new_holder(entity_index_column_name).array = person_entity_id_array = np.empty(
+                    simulation.get_or_new_holder(entity_index_column_name).array = person_entity_ids = np.empty(
                         steps_count * persons_step_size,
                         dtype = tbs.get_column(entity_index_column_name).dtype
                         )
-                    simulation.get_or_new_holder(entity_role_column_name).array = person_entity_role_array = np.empty(
+                    simulation.get_or_new_holder(entity_role_column_name).array = person_entity_roles = np.empty(
                         steps_count * persons_step_size,
                         dtype = tbs.get_column(entity_role_column_name).dtype
                         )
-                    simulation.get_or_new_holder(entity_position_column_name).array = person_entity_position_array = np.empty(
+                    person_entity_legacy_roles = np.empty(
+                        steps_count * persons_step_size,
+                        dtype = tbs.get_column(entity_legacy_role_column_name).dtype
+                        )
+                    simulation.get_or_new_holder(entity_legacy_role_column_name).array = person_entity_legacy_roles
+                    simulation.get_or_new_holder(entity_position_column_name).array = person_entity_positions = np.empty(
                         steps_count * persons_step_size,
                         dtype = tbs.get_column(entity_position_column_name).dtype
                         )
 
-                    for member_index, member in enumerate(test_case[entity.key]):
-                        for person_position, person_role, person_id in iter_over_entity_members(entity, member):
+                    for scenario_entity_index, scenario_entity in enumerate(test_case[entity.key]):
+                        for person_position, person_role, person_legacy_role, person_id in iter_over_entity_members(entity, scenario_entity):
                             person_index = person_index_by_id[person_id]
                             for step_index in range(steps_count):
                                 individu_index = step_index * persons_step_size + person_index
 
-                                person_entity_id_array[individu_index] = step_index * entity_step_size + member_index
-                                person_entity_role_array[individu_index] = person_role
-                                person_entity_position_array[individu_index] = person_position
-                    entity.roles_count = len(np.unique(person_entity_role_array))
+                                person_entity_ids[individu_index] = step_index * entity_step_size + scenario_entity_index
+                                person_entity_roles[individu_index] = person_role
+                                person_entity_legacy_roles[individu_index] = person_legacy_role
+                                person_entity_positions[individu_index] = person_position
+                    entity.roles_count = person_entity_legacy_roles.max() + 1
 
                 for variable_name, column in tbs.column_by_name.iteritems():
                     if column.entity == entity and variable_name in used_columns_name:
@@ -693,6 +701,7 @@ def iter_over_entity_members(entity_description, scenario_entity):
         index_in_entity = 0
         role_index = 0
         role_in_scenario_indexes = {}
+        legacy_role_i = 0
 
         for role in entity_description.roles:
             if role.get('role_in_scenario'):
@@ -708,7 +717,10 @@ def iter_over_entity_members(entity_description, scenario_entity):
                 if type(individus) == str:
                     individus = [individus]
 
+                legacy_role_j = 0
                 for individu in individus:
-                    yield index_in_entity, role_index, individu
+                    yield index_in_entity, role_index, legacy_role_i + legacy_role_j, individu
                     index_in_entity += 1
+                    legacy_role_j += 1
             role_index += 1
+            legacy_role_i += (role['max'] if role.get('max') else 1)

@@ -330,6 +330,11 @@ class Simulation(object):
         role_column_name = tbs.get_entity_role_column_name(entity)
         return self.holder_by_name[role_column_name].array
 
+    def get_legacy_role_in_entity(self, entity):
+        tbs = self.tax_benefit_system
+        legacy_role_column_name = tbs.get_entity_legacy_role_column_name(entity)
+        return self.holder_by_name[legacy_role_column_name].array
+
     def get_position_in_entity(self, entity):
         tbs = self.tax_benefit_system
         position_column_name = tbs.get_entity_position_column_name(entity)

@@ -204,7 +204,6 @@ class SimpleFormula(AbstractFormula):
             entity = holder.entity
         else:
             assert entity in simulation.tax_benefit_system.entities, u"Unknown entity: {}".format(entity).encode('utf-8')
-        index_for_person_variable_name = simulation.tax_benefit_system.get_entity_index_column_name(entity)
 
         assert not entity.is_person
         if isinstance(array_or_dated_holder, (holders.DatedHolder, holders.Holder)):
@@ -217,14 +216,14 @@ class SimpleFormula(AbstractFormula):
             persons_count = simulation.nb_persons_in_entity(persons)
             assert array.size == persons_count, u"Expected an array of size {}. Got: {}".format(persons_count,
                 array.size)
-        entity_index_array = simulation.holder_by_name[index_for_person_variable_name].array
+        entity_index_array = simulation.get_entity_id(entity)
+
         if roles is None:
             roles = range(entity.roles_count)
         target_array = self.zeros(dtype = np.bool)
         for role in roles:
             # TODO Mettre les filtres en cache dans la simulation
-            role_for_person_variable_name = holder.simulation.tax_benefit_system.get_entity_role_column_name(entity)
-            boolean_filter = simulation.holder_by_name[role_for_person_variable_name].array == role
+            boolean_filter = (simulation.get_legacy_role_in_entity(entity) == role)
             target_array[entity_index_array[boolean_filter]] += array[boolean_filter]
         return target_array
 
@@ -268,13 +267,12 @@ class SimpleFormula(AbstractFormula):
         persons_count = simulation.nb_persons_in_entity(persons)
         target_array = np.empty(persons_count, dtype = array.dtype)
         target_array.fill(default)
-        index_for_person_variable_name = simulation.tax_benefit_system.get_entity_index_column_name(entity)
-        entity_index_array = simulation.holder_by_name[index_for_person_variable_name].array
+        entity_index_array = simulation.get_entity_id(entity)
+
         if roles is None:
             roles = range(entity.roles_count)
         for role in roles:
-            role_for_person_variable_name = holder.simulation.tax_benefit_system.get_entity_role_column_name(entity)
-            boolean_filter = simulation.holder_by_name[role_for_person_variable_name].array == role
+            boolean_filter = (simulation.get_legacy_role_in_entity(entity) == role)
             try:
                 target_array[boolean_filter] = array[entity_index_array[boolean_filter]]
             except:
@@ -480,14 +478,13 @@ class SimpleFormula(AbstractFormula):
                 array.size)
             if default is None:
                 default = 0
-        index_for_person_variable_name = simulation.tax_benefit_system.get_entity_index_column_name(entity)
-        entity_index_array = simulation.holder_by_name[index_for_person_variable_name].array
+        entity_index_array = simulation.get_entity_id(entity)
+
         assert isinstance(role, int)
         entity_count = simulation.nb_persons_in_entity(entity)
         target_array = np.empty(entity_count, dtype = array.dtype)
         target_array.fill(default)
-        role_for_person_variable_name = holder.simulation.tax_benefit_system.get_entity_role_column_name(entity)
-        boolean_filter = simulation.holder_by_name[role_for_person_variable_name].array == role
+        boolean_filter = (simulation.get_legacy_role_in_entity(entity) == role)
         try:
             target_array[entity_index_array[boolean_filter]] = array[boolean_filter]
         except:
@@ -536,8 +533,7 @@ class SimpleFormula(AbstractFormula):
                 array.size)
             if default is None:
                 default = 0
-        index_for_person_variable_name = simulation.tax_benefit_system.get_entity_index_column_name(entity)
-        entity_index_array = simulation.holder_by_name[index_for_person_variable_name].array
+        entity_index_array = simulation.get_entity_id(entity)
         if roles is None:
             # To ensure that existing formulas don't fail, ensure there is always at least 11 roles.
             # roles = range(entity.roles_count)
@@ -547,8 +543,8 @@ class SimpleFormula(AbstractFormula):
         for role in roles:
             target_array_by_role[role] = target_array = np.empty(entity_count, dtype = array.dtype)
             target_array.fill(default)
-            role_for_person_variable_name = holder.simulation.tax_benefit_system.get_entity_role_column_name(entity)
-            boolean_filter = holder.simulation.holder_by_name[role_for_person_variable_name].array == role
+
+            boolean_filter = (simulation.get_legacy_role_in_entity(entity) == role)
             try:
                 target_array[entity_index_array[boolean_filter]] = array[boolean_filter]
             except:
@@ -577,15 +573,15 @@ class SimpleFormula(AbstractFormula):
             persons_count = simulation.nb_persons_in_entity(persons)
             assert array.size == persons_count, u"Expected an array of size {}. Got: {}".format(persons_count,
                 array.size)
-        index_for_person_variable_name = simulation.tax_benefit_system.get_entity_index_column_name(entity)
-        entity_index_array = simulation.holder_by_name[index_for_person_variable_name].array
-        if roles is None:
+
+        entity_index_array = simulation.get_entity_id(entity)
+
+        if roles is None: # Here we assume we have only one person per role. Not true with new role.
             roles = range(entity.roles_count)
         target_array = np.zeros(simulation.nb_persons_in_entity(entity), dtype = array.dtype if array.dtype != np.bool else np.int16)
         for role in roles:
             # TODO: Mettre les filtres en cache dans la simulation
-            role_for_person_variable_name = holder.simulation.tax_benefit_system.get_entity_role_column_name(entity)
-            boolean_filter = simulation.holder_by_name[role_for_person_variable_name].array == role
+            boolean_filter = (simulation.get_legacy_role_in_entity(entity) == role)
             target_array[entity_index_array[boolean_filter]] += array[boolean_filter]
         return target_array
 
@@ -671,12 +667,12 @@ def neutralize_column(column):
 
 
 def new_filled_column(base_function = UnboundLocalError, calculate_output = UnboundLocalError,
-        cerfa_field = UnboundLocalError, column = UnboundLocalError, comments = UnboundLocalError, doc = None,
-        entity = UnboundLocalError, formula_class = UnboundLocalError, is_permanent = UnboundLocalError,
-        label = UnboundLocalError, law_reference = UnboundLocalError, line_number = UnboundLocalError, module = None,
-        name = None, reference_column = None, set_input = UnboundLocalError, source_code = UnboundLocalError,
-        source_file_path = UnboundLocalError, start_date = UnboundLocalError, stop_date = UnboundLocalError,
-        url = UnboundLocalError, **specific_attributes):
+    cerfa_field = UnboundLocalError, column = UnboundLocalError, comments = UnboundLocalError, doc = None,
+    entity = UnboundLocalError, formula_class = UnboundLocalError, is_permanent = UnboundLocalError,
+    label = UnboundLocalError, law_reference = UnboundLocalError, line_number = UnboundLocalError, module = None,
+    name = None, reference_column = None, set_input = UnboundLocalError, source_code = UnboundLocalError,
+    source_file_path = UnboundLocalError, start_date = UnboundLocalError, stop_date = UnboundLocalError,
+    url = UnboundLocalError, **specific_attributes):
         # Validate arguments.
 
     if reference_column is not None:

@@ -84,6 +84,16 @@ class TaxBenefitSystem(object):
                 formula_class = SimpleFormula
                 )
 
+            # Needed for the old entity conversions, such as formula.split_by_roles, etc.
+            # Only one person per entity can have a given legacy_role
+            legacy_role_column = new_filled_column(
+                name = u"legacy_role_in_{}".format(entity.key),
+                entity = self.person_entity,
+                column = EnumCol(enum = entity.get_role_enum()),
+                is_permanent = True,
+                formula_class = SimpleFormula
+                )
+
             position_column = new_filled_column(
                 name = u"position_in_{}".format(entity.key),
                 entity = self.person_entity,
@@ -95,6 +105,7 @@ class TaxBenefitSystem(object):
             self.add_column(id_column)
             self.add_column(role_column)
             self.add_column(position_column)
+            self.add_column(legacy_role_column)
 
     @property
     def base_tax_benefit_system(self):
@@ -275,6 +286,9 @@ class TaxBenefitSystem(object):
 
     def get_entity_role_column_name(self, entity):
         return u"role_in_{}".format(entity.key) if not entity.is_person else None
+
+    def get_entity_legacy_role_column_name(self, entity):
+        return u"legacy_role_in_{}".format(entity.key) if not entity.is_person else None
 
     def get_entity_position_column_name(self, entity):
         return u"position_in_{}".format(entity.key) if not entity.is_person else None

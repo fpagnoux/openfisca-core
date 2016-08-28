@@ -23,5 +23,6 @@ simulation = tax_benefit_system.new_scenario().init_from_test_case(
 def test_role_index_and_positions():
 
     assert_near(simulation.get_role_in_entity(Familles), [0, 0, 1, 1, 0, 1])
+    assert_near(simulation.get_legacy_role_in_entity(Familles), [0, 1, 2, 3, 0, 2])
     assert_near(simulation.get_entity_id(Familles), [0, 0, 0, 0, 1, 1])
     assert_near(simulation.get_position_in_entity(Familles), [0, 1, 2, 3, 0, 1])

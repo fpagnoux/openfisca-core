@@ -416,6 +416,11 @@ class Simulation(object):
         boolean_filter = (entity_position_array == 0)
         return array[entity_index_array] * boolean_filter
 
+    def share_between_members(self, array, entity, role = None):
+        role_condition = (self.get_role_in_entity(entity) == role)
+        nb_persons_per_entity = self.sum_in_entity(role_condition, entity)
+        return self.project_on_persons(array / nb_persons_per_entity, entity, role = role)
+
     def empty_array(self, entity):
         return np.zeros(self.get_entity_count(entity))
 

@@ -405,9 +405,10 @@ class Simulation(object):
 
     # Projection entity -> person(s)
 
-    def project_on_persons(self, array, entity):  # should take a role
+    def project_on_persons(self, array, entity, role = None):
+        role_condition = (self.get_role_in_entity(entity) == role) if role is not None else True
         entity_index_array = self.get_entity_id(entity)
-        return array[entity_index_array]
+        return array[entity_index_array] * role_condition
 
     def project_on_first_person(self, array, entity):
         entity_position_array = self.get_position_in_entity(entity)

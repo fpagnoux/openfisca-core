@@ -400,7 +400,7 @@ class Holder(object):
         return value_json
 
     def default_array(self):
-        array_size = self.simulation.get_entity_count(self.column.entity)
+        array_size = self.simulation.nb_persons_in_entity(self.column.entity)
         array = np.empty(array_size, dtype = self.column.dtype)
         array.fill(self.column.default)
         return array

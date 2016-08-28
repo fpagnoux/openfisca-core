@@ -320,9 +320,6 @@ class Simulation(object):
     def get_entity_step_size(self, entity):
         return self.entity_count[entity.key]['step_size']
 
-    def get_entity_count(self, entity):
-        return self.entity_count[entity.key]['count']
-
     def get_entity_id(self, entity):
         tbs = self.tax_benefit_system
         index_column_name = tbs.get_entity_index_column_name(entity)
@@ -391,6 +388,13 @@ class Simulation(object):
     def min_in_entity(self, array, entity, role = None):
         return self.reduce_in_entity(array, entity, neutral_element = np.infty, reducer = np.minimum, role = role)
 
+    def nb_persons_in_entity(self, entity, role = None):
+        if role is None:
+            return self.entity_count[entity.key]['count']
+        else:
+            role_condition = (self.get_role_in_entity(entity) == role)
+            return self.sum_in_entity(role_condition, entity)
+
     # Projection person -> entity
 
     def value_from_person(self, array, entity, role, default = 0):
@@ -417,14 +421,15 @@ class Simulation(object):
         return array[entity_index_array] * boolean_filter
 
     def share_between_members(self, array, entity, role = None):
-        role_condition = (self.get_role_in_entity(entity) == role)
-        nb_persons_per_entity = self.sum_in_entity(role_condition, entity)
+        nb_persons_per_entity = self.nb_persons_in_entity(entity, role)
         return self.project_on_persons(array / nb_persons_per_entity, entity, role = role)
 
+    # Helpers
+
     def empty_array(self, entity):
-        return np.zeros(self.get_entity_count(entity))
+        return np.zeros(self.nb_persons_in_entity(entity))
 
     def filled_array(self, entity, value):
         with warnings.catch_warnings():  # Avoid a non-relevant warning
             warnings.simplefilter("ignore")
-            return np.full(self.get_entity_count(entity), value)
+            return np.full(self.nb_persons_in_entity(entity), value)

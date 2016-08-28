@@ -86,7 +86,7 @@ class AbstractFormula(object):
 
         kwargs are forwarded to np.zeros.
         '''
-        entity_count = self.holder.simulation.get_entity_count(self.holder.entity)
+        entity_count = self.holder.simulation.nb_persons_in_entity(self.holder.entity)
         return np.zeros(entity_count, **kwargs)
 
 
@@ -214,7 +214,7 @@ class SimpleFormula(AbstractFormula):
             array = array_or_dated_holder
             assert isinstance(array, np.ndarray), u"Expected a holder or a Numpy array. Got: {}".format(array).encode(
                 'utf-8')
-            persons_count = simulation.get_entity_count(persons)
+            persons_count = simulation.nb_persons_in_entity(persons)
             assert array.size == persons_count, u"Expected an array of size {}. Got: {}".format(persons_count,
                 array.size)
         entity_index_array = simulation.holder_by_name[index_for_person_variable_name].array
@@ -259,13 +259,13 @@ class SimpleFormula(AbstractFormula):
             array = array_or_dated_holder
             assert isinstance(array, np.ndarray), u"Expected a holder or a Numpy array. Got: {}".format(array).encode(
                 'utf-8')
-            entity_count = simulation.get_entity_count(entity)
+            entity_count = simulation.nb_persons_in_entity(entity)
             assert array.size == entity_count, u"Expected an array of size {}. Got: {}".format(entity_count,
                 array.size)
             if default is None:
                 default = 0
         assert not entity.is_person
-        persons_count = simulation.get_entity_count(persons)
+        persons_count = simulation.nb_persons_in_entity(persons)
         target_array = np.empty(persons_count, dtype = array.dtype)
         target_array.fill(default)
         index_for_person_variable_name = simulation.tax_benefit_system.get_entity_index_column_name(entity)
@@ -406,7 +406,7 @@ class SimpleFormula(AbstractFormula):
                 stringify_array(array)).encode('utf-8')
         assert isinstance(array, np.ndarray), u"Function {}@{}<{}>() --> <{}>{} doesn't return a numpy array".format(
             column.name, entity.key, str(period), str(output_period), array).encode('utf-8')
-        entity_count = simulation.get_entity_count(entity)
+        entity_count = simulation.nb_persons_in_entity(entity)
         assert array.size == entity_count, \
             u"Function {}@{}<{}>() --> <{}>{} returns an array of size {}, but size {} is expected for {}".format(
                 column.name, entity.key, str(period), str(output_period), stringify_array(array),
@@ -475,7 +475,7 @@ class SimpleFormula(AbstractFormula):
             array = array_or_dated_holder
             assert isinstance(array, np.ndarray), u"Expected a holder or a Numpy array. Got: {}".format(array).encode(
                 'utf-8')
-            persons_count = simulation.get_entity_count(persons)
+            persons_count = simulation.nb_persons_in_entity(persons)
             assert array.size == persons_count, u"Expected an array of size {}. Got: {}".format(persons_count,
                 array.size)
             if default is None:
@@ -483,7 +483,7 @@ class SimpleFormula(AbstractFormula):
         index_for_person_variable_name = simulation.tax_benefit_system.get_entity_index_column_name(entity)
         entity_index_array = simulation.holder_by_name[index_for_person_variable_name].array
         assert isinstance(role, int)
-        entity_count = simulation.get_entity_count(entity)
+        entity_count = simulation.nb_persons_in_entity(entity)
         target_array = np.empty(entity_count, dtype = array.dtype)
         target_array.fill(default)
         role_for_person_variable_name = holder.simulation.tax_benefit_system.get_entity_role_column_name(entity)
@@ -531,7 +531,7 @@ class SimpleFormula(AbstractFormula):
             array = array_or_dated_holder
             assert isinstance(array, np.ndarray), u"Expected a holder or a Numpy array. Got: {}".format(array).encode(
                 'utf-8')
-            persons_count = simulation.get_entity_count(persons)
+            persons_count = simulation.nb_persons_in_entity(persons)
             assert array.size == persons_count, u"Expected an array of size {}. Got: {}".format(persons_count,
                 array.size)
             if default is None:
@@ -543,7 +543,7 @@ class SimpleFormula(AbstractFormula):
             # roles = range(entity.roles_count)
             roles = range(max(entity.roles_count, 11))
         target_array_by_role = {}
-        entity_count = holder.simulation.get_entity_count(entity)
+        entity_count = holder.simulation.nb_persons_in_entity(entity)
         for role in roles:
             target_array_by_role[role] = target_array = np.empty(entity_count, dtype = array.dtype)
             target_array.fill(default)
@@ -574,14 +574,14 @@ class SimpleFormula(AbstractFormula):
             array = array_or_dated_holder
             assert isinstance(array, np.ndarray), u"Expected a holder or a Numpy array. Got: {}".format(array).encode(
                 'utf-8')
-            persons_count = simulation.get_entity_count(persons)
+            persons_count = simulation.nb_persons_in_entity(persons)
             assert array.size == persons_count, u"Expected an array of size {}. Got: {}".format(persons_count,
                 array.size)
         index_for_person_variable_name = simulation.tax_benefit_system.get_entity_index_column_name(entity)
         entity_index_array = simulation.holder_by_name[index_for_person_variable_name].array
         if roles is None:
             roles = range(entity.roles_count)
-        target_array = np.zeros(simulation.get_entity_count(entity), dtype = array.dtype if array.dtype != np.bool else np.int16)
+        target_array = np.zeros(simulation.nb_persons_in_entity(entity), dtype = array.dtype if array.dtype != np.bool else np.int16)
         for role in roles:
             # TODO: Mettre les filtres en cache dans la simulation
             role_for_person_variable_name = holder.simulation.tax_benefit_system.get_entity_role_column_name(entity)

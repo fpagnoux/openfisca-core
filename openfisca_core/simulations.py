@@ -429,6 +429,17 @@ class Simulation(object):
         nb_persons_per_entity = self.nb_persons_in_entity(entity, role)
         return self.project_on_persons(array / nb_persons_per_entity, entity, role = role)
 
+    # Projection person -> person
+
+    def swap_in_entity(self, array, entity, role):
+        # Make sure there is only two people with the role
+        entity_filter = self.nb_persons_in_entity(entity, role) == 2
+        higher_value = entity_filter * self.max_in_entity(array, entity, role)
+        lower_value = entity_filter * self.min_in_entity(array, entity, role)
+        higher_value_i = self.project_on_persons(higher_value, entity, role)
+        lower_value_i = self.project_on_persons(lower_value, entity, role)
+        return (array == higher_value_i) * lower_value_i + (array == lower_value_i) * higher_value_i
+
     # Helpers
 
     def empty_array(self, entity):

@@ -65,9 +65,9 @@ class dom_tom(Variable):
     entity = Familles
     label = u"La famille habite-t-elle les DOM-TOM ?"
 
-    def function(self, simulation, period):
+    def function(famille, period):
         period = period.start.period(u'year').offset('first-of')
-        depcom = simulation.calculate('depcom', period)
+        depcom = famille.calculate('depcom', period)
 
         return period, np.logical_or(startswith(depcom, '97'), startswith(depcom, '98'))
 
@@ -77,10 +77,10 @@ class revenu_disponible(Variable):
     entity = Individus
     label = u"Revenu disponible de l'individu"
 
-    def function(self, simulation, period):
+    def function(individu, period):
         period = period.start.period(u'year').offset('first-of')
-        rsa = simulation.calculate_add('rsa', period)
-        salaire_imposable = simulation.calculate('salaire_imposable', period)
+        rsa = individu.calculate_add('rsa', period)
+        salaire_imposable = individu.calculate('salaire_imposable', period)
 
         return period, rsa + salaire_imposable * 0.7
 
@@ -90,9 +90,9 @@ class revenu_disponible_famille(Variable):
     entity = Familles
     label = u"Revenu disponible de la famille"
 
-    def function(self, simulation, period):
-        revenu_disponible_individus = simulation.calculate('revenu_disponible', period)
-        return period, simulation.sum_in_entity(revenu_disponible_individus, entity = Familles)
+    def function(famille, period):
+        revenu_disponible = famille.members.calculate('revenu_disponible', period)
+        return period, famille.sum(revenu_disponible)
 
 
 class rsa(DatedVariable):
@@ -101,23 +101,23 @@ class rsa(DatedVariable):
     label = u"RSA"
 
     @dated_function(datetime.date(2010, 1, 1))
-    def function_2010(self, simulation, period):
+    def function_2010(individu, period):
         period = period.start.period(u'month').offset('first-of')
-        salaire_imposable = simulation.calculate_divide('salaire_imposable', period)
+        salaire_imposable = individu.calculate_divide('salaire_imposable', period)
 
         return period, (salaire_imposable < 500) * 100.0
 
     @dated_function(datetime.date(2011, 1, 1), datetime.date(2012, 12, 31))
-    def function_2011_2012(self, simulation, period):
+    def function_2011_2012(individu, period):
         period = period.start.period(u'month').offset('first-of')
-        salaire_imposable = simulation.calculate_divide('salaire_imposable', period)
+        salaire_imposable = individu.calculate_divide('salaire_imposable', period)
 
         return period, (salaire_imposable < 500) * 200.0
 
     @dated_function(datetime.date(2013, 1, 1))
-    def function_2013(self, simulation, period):
+    def function_2013(individu, period):
         period = period.start.period(u'month').offset('first-of')
-        salaire_imposable = simulation.calculate_divide('salaire_imposable', period)
+        salaire_imposable = individu.calculate_divide('salaire_imposable', period)
 
         return period, (salaire_imposable < 500) * 300
 
@@ -127,11 +127,13 @@ class salaire_imposable(Variable):
     entity = Individus
     label = u"Salaire imposable"
 
-    def function(self, simulation, period):
+    def function(individu, period):
         period = period.start.period(u'year').offset('first-of')
-        dom_tom_famille = simulation.calculate('dom_tom', period)
-        dom_tom_individu = simulation.project_on_persons(dom_tom_famille, entity = Familles)
-        salaire_net = simulation.calculate('salaire_net', period)
+
+        dom_tom_famille = individu.famille.calculate('dom_tom',period) # Implicit conversion would be nice
+        dom_tom_individu = individu.famille.project(dom_tom_famille)
+
+        salaire_net = individu.calculate('salaire_net', period)
 
         return period, salaire_net * 0.9 - 100 * dom_tom_individu
 

@@ -52,6 +52,11 @@ class Simulation(object):
         self.compact_legislation_by_instant_cache = {}
         self.reference_compact_legislation_by_instant_cache = {}
 
+        self.entities = {
+            entity_definition.key: entity_definition(self)
+            for entity_definition in self.tax_benefit_system.entities
+        }
+
         self.entity_count = dict(
             (entity.key, {"step_size": 0, "count": 0})
             for entity in self.tax_benefit_system.entities

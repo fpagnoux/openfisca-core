@@ -50,11 +50,6 @@ class AbstractScenario(object):
 
         persons = simulation.tax_benefit_system.person_entity
 
-        simulation.entities = {
-            entity_definition.key: entity_definition(simulation)
-            for entity_definition in simulation.tax_benefit_system.entities
-        }
-
         if test_case is None:
             if self.input_variables is not None:
                 # Note: For set_input to work, handle days, before months, before years => use sorted().
@@ -103,7 +98,7 @@ class AbstractScenario(object):
             simulation.steps_count = steps_count
 
             for entity in simulation.tax_benefit_system.entities:
-                step_size = len(test_case[entity.key])
+                step_size = len(test_case[entity.plural])
                 count = steps_count * step_size
                 simulation.set_entity_count(entity, count)
                 simulation.set_entity_step_size(entity, step_size)
@@ -112,7 +107,7 @@ class AbstractScenario(object):
 
             person_index_by_id = dict(
                 (person[u'id'], person_index)
-                for person_index, person in enumerate(test_case[persons.key])
+                for person_index, person in enumerate(test_case[persons.plural])
                 )
 
             for entity in simulation.tax_benefit_system.entities:
@@ -123,7 +118,7 @@ class AbstractScenario(object):
 
                 used_columns_name = set(
                     key
-                    for entity_member in test_case[entity.key]
+                    for entity_member in test_case[entity.plural]
                     for key, value in entity_member.iteritems()
                     if value is not None and key not in (
                         entity_index_column_name,
@@ -155,7 +150,7 @@ class AbstractScenario(object):
                         dtype = tbs.get_column(entity_position_column_name).dtype
                         )
 
-                    for scenario_entity_index, scenario_entity in enumerate(test_case[entity.key]):
+                    for scenario_entity_index, scenario_entity in enumerate(test_case[entity.plural]):
                         for person_position, person_role, person_legacy_role, person_id in iter_over_entity_members(entity, scenario_entity):
                             person_index = person_index_by_id[person_id]
                             for step_index in range(steps_count):
@@ -172,7 +167,7 @@ class AbstractScenario(object):
                         variable_periods = set()
                         for cell in (
                                 entity_member.get(variable_name)
-                                for entity_member in test_case[entity.key]
+                                for entity_member in test_case[entity.plural]
                                 ):
                             if isinstance(cell, dict):
                                 if any(value is not None for value in cell.itervalues()):
@@ -190,7 +185,7 @@ class AbstractScenario(object):
                                         if variable_period == simulation_period else None)
                                     for cell in (
                                         entity_member.get(variable_name)
-                                        for entity_member in test_case[entity.key]
+                                        for entity_member in test_case[entity.plural]
                                         )
                                     )
                                 ]
@@ -329,10 +324,10 @@ class AbstractScenario(object):
                             errors.setdefault('axes', {}).setdefault(parallel_axes_index, {}).setdefault(
                                 axis_index, {})['max'] = state._(u"Max value must be greater than min value")
                         column = tbs.get_column(axis['name'])
-                        if axis['index'] >= len(data['test_case'][column.entity.key]):
+                        if axis['index'] >= len(data['test_case'][column.entity.plural]):
                             errors.setdefault('axes', {}).setdefault(parallel_axes_index, {}).setdefault(
                                 axis_index, {})['index'] = state._(u"Index must be lower than {}").format(
-                                    len(data['test_case'][column.entity.key]))
+                                    len(data['test_case'][column.entity.plural]))
                         if axis_index > 0:
                             if axis['count'] != axis_count:
                                 errors.setdefault('axes', {}).setdefault(parallel_axes_index, {}).setdefault(

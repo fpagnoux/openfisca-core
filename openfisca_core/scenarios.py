@@ -50,6 +50,11 @@ class AbstractScenario(object):
 
         persons = simulation.tax_benefit_system.person_entity
 
+        simulation.entities = {
+            entity_definition.key: entity_definition(simulation)
+            for entity_definition in simulation.tax_benefit_system.entities
+        }
+
         if test_case is None:
             if self.input_variables is not None:
                 # Note: For set_input to work, handle days, before months, before years => use sorted().

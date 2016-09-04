@@ -141,9 +141,9 @@ class salaire_net(Variable):
     entity = Individus
     label = u"Salaire net"
 
-    def function(self, simulation, period):
+    def function(individu, period):
         period = period.start.period(u'year').offset('first-of')
-        salaire_brut = simulation.calculate('salaire_brut', period)
+        salaire_brut = individu.calculate('salaire_brut', period)
 
         return period, salaire_brut * 0.8
 

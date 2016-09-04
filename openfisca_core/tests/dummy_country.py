@@ -17,9 +17,9 @@ TEST_DIRECTORY = path.dirname(path.abspath(__file__))
 
 # Entities
 
-Familles = Entity(
-    key = "familles",
-    label = u'Famille',
+class Familles(Entity):
+    key = "familles"
+    label = u'Famille'
     roles = [
         {
             'key': 'parents',
@@ -31,13 +31,11 @@ Familles = Entity(
             'label': u'Enfants'
             }
         ]
-    )
 
-Individus = Entity(
-    key = "individus",
-    label = u'Individus',
+class Individus(Entity):
+    key = "individus"
+    label = u'Individus'
     is_person = True
-    )
 
 
 # Scenarios

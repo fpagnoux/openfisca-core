@@ -61,8 +61,8 @@ class Holder(object):
         assert column is not None
         assert self.column is None
         self.column = column
-        self.entity = column.entity
         self.simulation = simulation
+        self.entity = self.simulation.entities[self.column.entity.key]
 
     @property
     def array(self):

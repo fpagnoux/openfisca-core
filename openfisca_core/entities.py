@@ -4,12 +4,18 @@ from enumerations import Enum
 
 
 class Entity(object):
+    key = None
+    label = None
+    roles = None
+    is_person = False
 
-    def __init__(self, key, label = u"", roles = {}, is_person = False):
-        self.key = key
-        self.label = label
-        self.is_person = is_person
-        self.roles = roles
+    @classmethod
+    def get_role_enum(cls):
+        return Enum(map(lambda role: role['key'], cls.roles))
 
-    def get_role_enum(self):
-        return Enum(map(lambda role: role['key'], self.roles))
+
+    def __init__(self, simulation):
+        self.simulation = simulation
+
+    def calculate(self, variable_name, period):
+        return self.simulation.calculate(variable_name, period)

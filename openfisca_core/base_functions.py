@@ -5,7 +5,7 @@ from . import periods
 
 def permanent_default_value(formula, simulation, period, *extra_params):
     if formula.function is not None:
-        return formula.function(simulation, period, *extra_params)
+        return formula.exec_function(simulation, period, *extra_params)
     holder = formula.holder
     array = holder.default_array()
     return period, array
@@ -44,14 +44,14 @@ def requested_period_added_value(formula, simulation, period, *extra_params):
             if array is not None:
                 return period, array
     if formula.function is not None:
-        return formula.function(simulation, period, *extra_params)
+        return formula.exec_function(simulation, period, *extra_params)
     array = holder.default_array()
     return period, array
 
 
 def requested_period_default_value(formula, simulation, period, *extra_params):
     if formula.function is not None:
-        return formula.function(simulation, period, *extra_params)
+        return formula.exec_function(simulation, period, *extra_params)
     holder = formula.holder
     array = holder.default_array()
     return period, array
@@ -77,7 +77,7 @@ def requested_period_last_value(formula, simulation, period, *extra_params, **kw
             next_period, next_array = known_values[-1]
             return period, last_array
     if formula.function is not None:
-        return formula.function(simulation, period, *extra_params)
+        return formula.exec_function(simulation, period, *extra_params)
     array = holder.default_array()
     return period, array
 
@@ -97,6 +97,6 @@ def last_duration_last_value(formula, simulation, period, *extra_params):
             if last_period.start <= period.start and (formula.function is None or last_period.stop >= period.stop):
                 return periods.Period((last_period[0], period.start, last_period[2])), last_array
     if formula.function is not None:
-        return formula.function(simulation, period, *extra_params)
+        return formula.exec_function(simulation, period, *extra_params)
     array = holder.default_array()
     return period, array

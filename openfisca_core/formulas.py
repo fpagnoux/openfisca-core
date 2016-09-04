@@ -168,6 +168,8 @@ class DatedFormula(AbstractGroupedFormula):
         array = holder.default_array()
         return holder.put_in_cache(array, period, parameters.get('extra_params'))
 
+
+
     def graph_parameters(self, edges, get_input_variables_and_parameters, nodes, visited):
         """Recursively build a graph of formulas."""
         for dated_formula in self.dated_formulas:
@@ -452,6 +454,16 @@ class SimpleFormula(AbstractFormula):
             simulation.max_nb_cycles = None
 
         return dated_holder
+
+    # Retro-compatibility-layer
+    def exec_function(self, simulation, period, *extra_params):
+        if self.function.im_func.func_code.co_argcount == 3:
+            return self.function(simulation, period, *extra_params)
+        else:
+            entity = self.holder.entity
+            function = self.function.im_func
+            return function(entity, period)
+
 
     def filter_role(self, array_or_dated_holder, default = None, entity = None, role = None):
         """Convert a persons array to an entity array, copying only cells of persons having the given role."""

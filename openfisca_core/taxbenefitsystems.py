@@ -89,7 +89,7 @@ class TaxBenefitSystem(object):
             legacy_role_column = new_filled_column(
                 name = u"legacy_role_in_{}".format(entity.key),
                 entity = self.person_entity,
-                column = EnumCol(enum = entity.get_role_enum()),
+                column = IntCol,
                 is_permanent = True,
                 formula_class = SimpleFormula
                 )

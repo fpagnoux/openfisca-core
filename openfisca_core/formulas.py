@@ -86,8 +86,7 @@ class AbstractFormula(object):
 
         kwargs are forwarded to np.zeros.
         '''
-        entity_count = self.holder.simulation.nb_persons_in_entity(self.holder.entity)
-        return np.zeros(entity_count, **kwargs)
+        return np.zeros(self.holder.entity.count, **kwargs)
 
 
 class AbstractGroupedFormula(AbstractFormula):
@@ -215,7 +214,7 @@ class SimpleFormula(AbstractFormula):
             array = array_or_dated_holder
             assert isinstance(array, np.ndarray), u"Expected a holder or a Numpy array. Got: {}".format(array).encode(
                 'utf-8')
-            persons_count = simulation.nb_persons_in_entity(persons)
+            persons_count = persons.count
             assert array.size == persons_count, u"Expected an array of size {}. Got: {}".format(persons_count,
                 array.size)
         entity_index_array = simulation.get_entity_id(entity)
@@ -260,13 +259,13 @@ class SimpleFormula(AbstractFormula):
             array = array_or_dated_holder
             assert isinstance(array, np.ndarray), u"Expected a holder or a Numpy array. Got: {}".format(array).encode(
                 'utf-8')
-            entity_count = simulation.nb_persons_in_entity(entity)
+            entity_count = entity.count
             assert array.size == entity_count, u"Expected an array of size {}. Got: {}".format(entity_count,
                 array.size)
             if default is None:
                 default = 0
         assert not entity.is_person
-        persons_count = simulation.nb_persons_in_entity(persons)
+        persons_count = persons.count
         target_array = np.empty(persons_count, dtype = array.dtype)
         target_array.fill(default)
         entity_index_array = simulation.get_entity_id(entity)
@@ -344,7 +343,7 @@ class SimpleFormula(AbstractFormula):
         assert period is not None
         holder = self.holder
         column = holder.column
-        entity = holder.column.entity
+        entity = holder.entity
         simulation = holder.simulation
         debug = simulation.debug
         debug_all = simulation.debug_all
@@ -406,7 +405,7 @@ class SimpleFormula(AbstractFormula):
                 stringify_array(array)).encode('utf-8')
         assert isinstance(array, np.ndarray), u"Function {}@{}<{}>() --> <{}>{} doesn't return a numpy array".format(
             column.name, entity.key, str(period), str(output_period), array).encode('utf-8')
-        entity_count = simulation.nb_persons_in_entity(entity)
+        entity_count = entity.count
         assert array.size == entity_count, \
             u"Function {}@{}<{}>() --> <{}>{} returns an array of size {}, but size {} is expected for {}".format(
                 column.name, entity.key, str(period), str(output_period), stringify_array(array),
@@ -485,7 +484,7 @@ class SimpleFormula(AbstractFormula):
             array = array_or_dated_holder
             assert isinstance(array, np.ndarray), u"Expected a holder or a Numpy array. Got: {}".format(array).encode(
                 'utf-8')
-            persons_count = simulation.nb_persons_in_entity(persons)
+            persons_count = persons.count
             assert array.size == persons_count, u"Expected an array of size {}. Got: {}".format(persons_count,
                 array.size)
             if default is None:
@@ -493,7 +492,7 @@ class SimpleFormula(AbstractFormula):
         entity_index_array = simulation.get_entity_id(entity)
 
         assert isinstance(role, int)
-        entity_count = simulation.nb_persons_in_entity(entity)
+        entity_count = entity.count
         target_array = np.empty(entity_count, dtype = array.dtype)
         target_array.fill(default)
         boolean_filter = (simulation.get_legacy_role_in_entity(entity) == role)
@@ -540,7 +539,7 @@ class SimpleFormula(AbstractFormula):
             array = array_or_dated_holder
             assert isinstance(array, np.ndarray), u"Expected a holder or a Numpy array. Got: {}".format(array).encode(
                 'utf-8')
-            persons_count = simulation.nb_persons_in_entity(persons)
+            persons_count = persons.count
             assert array.size == persons_count, u"Expected an array of size {}. Got: {}".format(persons_count,
                 array.size)
             if default is None:
@@ -551,7 +550,7 @@ class SimpleFormula(AbstractFormula):
             # roles = range(entity.roles_count)
             roles = range(max(entity.roles_count, 11))
         target_array_by_role = {}
-        entity_count = holder.simulation.nb_persons_in_entity(entity)
+        entity_count = entity.count
         for role in roles:
             target_array_by_role[role] = target_array = np.empty(entity_count, dtype = array.dtype)
             target_array.fill(default)
@@ -582,7 +581,7 @@ class SimpleFormula(AbstractFormula):
             array = array_or_dated_holder
             assert isinstance(array, np.ndarray), u"Expected a holder or a Numpy array. Got: {}".format(array).encode(
                 'utf-8')
-            persons_count = simulation.nb_persons_in_entity(persons)
+            persons_count = persons.count
             assert array.size == persons_count, u"Expected an array of size {}. Got: {}".format(persons_count,
                 array.size)
 
@@ -590,7 +589,7 @@ class SimpleFormula(AbstractFormula):
 
         if roles is None: # Here we assume we have only one person per role. Not true with new role.
             roles = range(entity.roles_count)
-        target_array = np.zeros(simulation.nb_persons_in_entity(entity), dtype = array.dtype if array.dtype != np.bool else np.int16)
+        target_array = np.zeros(entity.count, dtype = array.dtype if array.dtype != np.bool else np.int16)
         for role in roles:
             # TODO: Mettre les filtres en cache dans la simulation
             boolean_filter = (simulation.get_legacy_role_in_entity(entity) == role)

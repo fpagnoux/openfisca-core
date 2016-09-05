@@ -315,7 +315,7 @@ class Holder(object):
         array = self.get_array(period)
         if array is None:
             return None
-        entity_step_size = self.simulation.get_entity_step_size(self.entity)
+        entity_step_size = self.entity.step_size
         return array.reshape([self.simulation.steps_count, entity_step_size]).sum(1)
 
     @property
@@ -400,7 +400,7 @@ class Holder(object):
         return value_json
 
     def default_array(self):
-        array_size = self.simulation.nb_persons_in_entity(self.column.entity)
+        array_size = self.entity.count
         array = np.empty(array_size, dtype = self.column.dtype)
         array.fill(self.column.default)
         return array

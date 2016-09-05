@@ -39,6 +39,18 @@ class Individus(Entity):
     label = u'Individus'
     is_person = True
 
+Famille = 'famille'
+Individu = 'individu'
+
+entities = [
+    Famille: {
+        plural: 'familles',
+        label: u'Familles'
+
+    }
+
+]
+
 
 # Scenarios
 

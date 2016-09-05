@@ -48,7 +48,7 @@ class AbstractScenario(object):
         simulation_period = simulation.period
         test_case = self.test_case
 
-        persons = simulation.tax_benefit_system.person_entity
+        persons = simulation.persons
 
         if test_case is None:
             if self.input_variables is not None:
@@ -57,17 +57,17 @@ class AbstractScenario(object):
                     holder = simulation.get_or_new_holder(variable_name)
                     entity = holder.entity
                     for period, array in array_by_period.iteritems():
-                        if simulation.nb_persons_in_entity(entity) == 0:
-                            simulation.set_entity_count(entity, len(array))
+                        if entity.count == 0:
+                            entity.count = len(array)
                         if use_set_input_hooks:
                             holder.set_input(period, array)
                         else:
                             holder.put_in_cache(array, period)
 
-            if simulation.nb_persons_in_entity(persons) == 0:
-                simulation.set_entity_count(persons, 1)
+            if persons.count == 0:
+                persons.count = 1
 
-            for entity in simulation.tax_benefit_system.entities:
+            for entity in simulation.entities:
                 if entity is persons:
                     continue
 
@@ -75,19 +75,19 @@ class AbstractScenario(object):
                 index_holder = simulation.get_or_new_holder(index_for_person_variable_name)
                 index_array = index_holder.array
                 if index_array is None:
-                    index_holder.array = np.arange(simulation.nb_persons_in_entity(persons), dtype = index_holder.column.dtype)
+                    index_holder.array = np.arange(persons.count, dtype = index_holder.column.dtype)
 
                 role_for_person_variable_name = simulation.tax_benefit_system.get_entity_role_column_name(entity)
                 role_holder = simulation.get_or_new_holder(role_for_person_variable_name)
                 role_array = role_holder.array
                 if role_array is None:
-                    role_holder.array = role_array = np.zeros(simulation.nb_persons_in_entity(persons), role_holder.column.dtype)
+                    role_holder.array = role_array = np.zeros(persons.count, role_holder.column.dtype)
                 entity.roles_count = role_array.max() + 1
 
-                if simulation.nb_persons_in_entity(entity) == 0:
-                    simulation.set_entity_count(entity, max(index_holder.array) + 1)
+                if entity.count == 0:
+                    entity.count = max(index_holder.array) + 1
                 else:
-                    assert simulation.nb_persons_in_entity(entity) == max(index_holder.array) + 1
+                    assert entity.count == max(index_holder.array) + 1
         else:
             steps_count = 1
             if self.axes is not None:
@@ -97,20 +97,20 @@ class AbstractScenario(object):
                     steps_count *= axis['count']
             simulation.steps_count = steps_count
 
-            for entity in simulation.tax_benefit_system.entities:
+            for entity in simulation.entities.itervalues():
                 step_size = len(test_case[entity.plural])
                 count = steps_count * step_size
-                simulation.set_entity_count(entity, count)
-                simulation.set_entity_step_size(entity, step_size)
+                entity.count = count
+                entity.step_size = step_size
 
-            persons_step_size = simulation.get_entity_step_size(persons)
+            persons_step_size = persons.step_size
 
             person_index_by_id = dict(
                 (person[u'id'], person_index)
                 for person_index, person in enumerate(test_case[persons.plural])
                 )
 
-            for entity in simulation.tax_benefit_system.entities:
+            for entity in simulation.entities.itervalues():
                 entity_index_column_name = self.tax_benefit_system.get_entity_index_column_name(entity)
                 entity_role_column_name = self.tax_benefit_system.get_entity_role_column_name(entity)
                 entity_legacy_role_column_name = self.tax_benefit_system.get_entity_legacy_role_column_name(entity)
@@ -130,7 +130,7 @@ class AbstractScenario(object):
 
                 if not entity.is_person:
 
-                    entity_step_size = simulation.get_entity_step_size(entity)
+                    entity_step_size = entity.step_size
 
                     simulation.get_or_new_holder(entity_index_column_name).array = person_entity_ids = np.empty(
                         steps_count * persons_step_size,
@@ -209,8 +209,8 @@ class AbstractScenario(object):
                     first_axis = parallel_axes[0]
                     axis_count = first_axis['count']
                     axis_entity = simulation.get_variable_entity(first_axis['name'])
-                    axis_entity_count = simulation.nb_persons_in_entity(axis_entity)
-                    axis_entity_step_size = simulation.get_entity_step_size(axis_entity)
+                    axis_entity_count = axis_entity.count
+                    axis_entity_step_size = axis_entity.step_size
                     for axis in parallel_axes:
                         axis_period = axis['period'] or simulation_period
                         holder = simulation.get_or_new_holder(axis['name'])

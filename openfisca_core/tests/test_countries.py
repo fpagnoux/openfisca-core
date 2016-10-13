@@ -170,6 +170,17 @@ def test_input_variable():
         ).new_simulation()
     assert_near(simulation.calculate('salaire_brut'), [2000])
 
+def test_basic_calculation():
+    year = 2016
+
+    simulation = tax_benefit_system.new_scenario().init_single_entity(
+        period = year,
+        parent1 = dict(
+            salaire_brut = 2000,
+            ),
+        ).new_simulation()
+    assert_near(simulation.calculate('salaire_net'), [1600])
+
 
 def test_1_axis():
     year = 2013
@@ -376,4 +387,3 @@ def test_non_existing_variable():
         ).new_simulation()
 
     simulation.calculate('non_existent_variable', 2013)
-

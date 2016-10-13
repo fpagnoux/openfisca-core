@@ -163,7 +163,7 @@ class AbstractScenario(object):
                     entity.roles_count = person_entity_legacy_roles.max() + 1
 
                 for variable_name, column in tbs.column_by_name.iteritems():
-                    if column.entity == entity and variable_name in used_columns_name:
+                    if column.entity == entity.__class__ and variable_name in used_columns_name:
                         variable_periods = set()
                         for cell in (
                                 entity_member.get(variable_name)

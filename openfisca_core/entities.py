@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import numpy as np
+
 from enumerations import Enum
 
 
@@ -54,10 +56,10 @@ class Entity(object):
         return self.simulation.calculate_divide(variable_name, period)
 
 
-    def get_entity_id(self, entity):
-        tbs = self.tax_benefit_system
-        index_column_name = tbs.get_entity_index_column_name(entity)
-        return self.holder_by_name[index_column_name].array
+    def get_entity_id(self):
+        tbs = self.simulation.tax_benefit_system
+        index_column_name = tbs.get_entity_index_column_name(self)
+        return self.simulation.holder_by_name[index_column_name].array
 
     def get_role_in_entity(self, entity):
         tbs = self.tax_benefit_system
@@ -80,12 +82,12 @@ class Entity(object):
 
     #  Aggregation persons -> entity
 
-    def sum_in_entity(self, array, entity, role = None):
+    def sum(self, array, role = None):
 
-        entity_index_array = self.get_entity_id(entity)
-        result = self.empty_array(entity)
+        entity_index_array = self.get_entity_id()
+        result = self.empty_array()
         if role is not None:
-            entity_role_array = self.get_role_in_entity(entity)
+            entity_role_array = self.get_role_in_entity()
             role_filter = (entity_role_array == role)
 
             # Entities for which one person at least has the given role
@@ -147,7 +149,7 @@ class Entity(object):
 
     def project(self, array, role = None):
         role_condition = (self.get_role_in_entity(entity) == role) if role is not None else True
-        entity_index_array = self.get_entity_id(entity)
+        entity_index_array = self.get_entity_id()
         return array[entity_index_array] * role_condition
 
     def project_on_first_person(self, array, entity):
@@ -173,10 +175,10 @@ class Entity(object):
 
     # Helpers
 
-    def empty_array(self, entity):
-        return np.zeros(entity.count)
+    def empty_array(self):
+        return np.zeros(self.count)
 
-    def filled_array(self, entity, value):
+    def filled_array(self, value):
         with warnings.catch_warnings():  # Avoid a non-relevant warning
             warnings.simplefilter("ignore")
-            return np.full(entity.count, value)
+            return np.full(self.count, value)

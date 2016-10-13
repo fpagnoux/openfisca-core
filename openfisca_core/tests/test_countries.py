@@ -154,10 +154,10 @@ class csg(Variable):
     entity = Individus
     label = u"CSG payées sur le salaire"
 
-    def function(self, simulation, period):
+    def function(individu, period, legislation):
         period = period.start.period(u'year').offset('first-of')
-        taux = simulation.legislation_at(period.start).csg.activite.deductible.taux
-        salaire_brut = simulation.calculate('salaire_brut', period)
+        taux = legislation(period.start).csg.activite.deductible.taux
+        salaire_brut = individu.calculate('salaire_brut', period)
 
         return period, taux * salaire_brut
 

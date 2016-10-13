@@ -2,7 +2,6 @@
 
 
 import collections
-import warnings
 
 import numpy as np
 

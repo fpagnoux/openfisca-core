@@ -16,6 +16,9 @@ from openfisca_core.tools import assert_near
 
 # Input variables
 
+class af(Variable):
+    column = FloatCol
+    entity = Familles
 
 class age_en_mois(Variable):
     column = IntCol
@@ -166,7 +169,7 @@ class TestTaxBenefitSystem(DummyTaxBenefitSystem):
         DummyTaxBenefitSystem.__init__(self)
 
         # We cannot automatically import all the variable from this file, there would be an import loop
-        self.add_variables(age_en_mois, birth, depcom, salaire_brut, age, dom_tom, revenu_disponible, revenu_disponible_famille, rsa, salaire_imposable, salaire_net, csg)
+        self.add_variables(age_en_mois, birth, depcom, salaire_brut, age, dom_tom, revenu_disponible, revenu_disponible_famille, rsa, salaire_imposable, salaire_net, csg, af)
 
 tax_benefit_system = TestTaxBenefitSystem()
 

@@ -67,27 +67,27 @@ class AbstractScenario(object):
             if persons.count == 0:
                 persons.count = 1
 
-            for entity in simulation.entities:
+            for entity in simulation.entities.itervalues():
                 if entity is persons:
                     continue
 
-                index_for_person_variable_name = simulation.tax_benefit_system.get_entity_index_column_name(entity)
-                index_holder = simulation.get_or_new_holder(index_for_person_variable_name)
-                index_array = index_holder.array
-                if index_array is None:
-                    index_holder.array = np.arange(persons.count, dtype = index_holder.column.dtype)
+                if entity.members_entity_id is None:
+                    entity.members_entity_id = np.arange(persons.count, dtype = np.int32)
 
-                role_for_person_variable_name = simulation.tax_benefit_system.get_entity_role_column_name(entity)
-                role_holder = simulation.get_or_new_holder(role_for_person_variable_name)
-                role_array = role_holder.array
-                if role_array is None:
-                    role_holder.array = role_array = np.zeros(persons.count, role_holder.column.dtype)
-                entity.roles_count = role_array.max() + 1
+                if entity.members_role is None:
+                    entity.members_role = np.zeros(persons.count, dtype = np.int32)
+                entity.roles_count = entity.members_role.max() + 1
+
+                if entity.members_position is None:
+                    entity.members_position = np.zeros(persons.count, dtype = np.int32)
+
+                if entity.members_legacy_role is None:
+                    entity.members_legacy_role = np.zeros(persons.count, dtype = np.int32)
 
                 if entity.count == 0:
-                    entity.count = max(index_holder.array) + 1
+                    entity.count = max(entity.members_entity_id) + 1
                 else:
-                    assert entity.count == max(index_holder.array) + 1
+                    assert entity.count == max(entity.members_entity_id) + 1
         else:
             steps_count = 1
             if self.axes is not None:

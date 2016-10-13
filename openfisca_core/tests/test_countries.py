@@ -149,13 +149,24 @@ class salaire_net(Variable):
 
         return period, salaire_brut * 0.8
 
+class csg(Variable):
+    column = FloatCol
+    entity = Individus
+    label = u"CSG payées sur le salaire"
+
+    def function(self, simulation, period):
+        period = period.start.period(u'year').offset('first-of')
+        taux = simulation.legislation_at(period.start).csg.activite.deductible.taux
+        salaire_brut = simulation.calculate('salaire_brut', period)
+
+        return period, taux * salaire_brut
 
 class TestTaxBenefitSystem(DummyTaxBenefitSystem):
     def __init__(self):
         DummyTaxBenefitSystem.__init__(self)
 
         # We cannot automatically import all the variable from this file, there would be an import loop
-        self.add_variables(age_en_mois, birth, depcom, salaire_brut, age, dom_tom, revenu_disponible, revenu_disponible_famille, rsa, salaire_imposable, salaire_net)
+        self.add_variables(age_en_mois, birth, depcom, salaire_brut, age, dom_tom, revenu_disponible, revenu_disponible_famille, rsa, salaire_imposable, salaire_net, csg)
 
 tax_benefit_system = TestTaxBenefitSystem()
 
@@ -181,6 +192,18 @@ def test_basic_calculation():
         ).new_simulation()
     assert_near(simulation.calculate('salaire_net'), [1600])
 
+def test_params():
+    year = 2013
+
+    simulation = tax_benefit_system.new_scenario().init_single_entity(
+        period = year,
+        parent1 = dict(
+            salaire_brut = 2000,
+            ),
+        ).new_simulation()
+    assert_near(simulation.calculate('csg'), [102])
+
+test_params()
 
 def test_1_axis():
     year = 2013

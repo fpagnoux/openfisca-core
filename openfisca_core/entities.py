@@ -22,6 +22,10 @@ class Entity(object):
         self.entity = self.__class__
         self.count = 0
         self.step_size = 0
+        self.members_entity_id = None
+        self.members_role = None
+        self.members_legacy_role = None
+        self.members_position = None
 
 
     # To add when building the simulation
@@ -55,27 +59,6 @@ class Entity(object):
     def calculate_divide(self, variable_name, period):
         return self.simulation.calculate_divide(variable_name, period)
 
-
-    def get_entity_id(self):
-        tbs = self.simulation.tax_benefit_system
-        index_column_name = tbs.get_entity_index_column_name(self)
-        return self.simulation.holder_by_name[index_column_name].array
-
-    def get_role_in_entity(self, entity):
-        tbs = self.tax_benefit_system
-        role_column_name = tbs.get_entity_role_column_name(entity)
-        return self.holder_by_name[role_column_name].array
-
-    def get_legacy_role_in_entity(self, entity):
-        tbs = self.tax_benefit_system
-        legacy_role_column_name = tbs.get_entity_legacy_role_column_name(entity)
-        return self.holder_by_name[legacy_role_column_name].array
-
-    def get_position_in_entity(self, entity):
-        tbs = self.tax_benefit_system
-        position_column_name = tbs.get_entity_position_column_name(entity)
-        return self.holder_by_name[position_column_name].array
-
     def transpose_to_entity(self, array, target_entity, origin_entity):
         input_projected = self.project_on_first_person(array, entity = origin_entity)
         return self.sum_in_entity(input_projected, entity = target_entity)
@@ -84,18 +67,17 @@ class Entity(object):
 
     def sum(self, array, role = None):
 
-        entity_index_array = self.get_entity_id()
         result = self.empty_array()
         if role is not None:
             entity_role_array = self.get_role_in_entity()
             role_filter = (entity_role_array == role)
 
             # Entities for which one person at least has the given role
-            entity_has_role_filter = np.bincount(entity_index_array, weights = role_filter) > 0
+            entity_has_role_filter = np.bincount(self.members_entity_id, weights = role_filter) > 0
 
-            result[entity_has_role_filter] += np.bincount(entity_index_array[role_filter], weights = array[role_filter])
+            result[entity_has_role_filter] += np.bincount(self.members_entity_id[role_filter], weights = array[role_filter])
         else:
-            result += np.bincount(entity_index_array, weights = array)
+            result += np.bincount(self.members_entity_id, weights = array)
         return result
 
     def any_in_entity(self, array, entity, role = None):
@@ -148,9 +130,8 @@ class Entity(object):
     # Projection entity -> person(s)
 
     def project(self, array, role = None):
-        role_condition = (self.get_role_in_entity(entity) == role) if role is not None else True
-        entity_index_array = self.get_entity_id()
-        return array[entity_index_array] * role_condition
+        role_condition = (self.members_role == role) if role is not None else True
+        return array[self.members_entity_id] * role_condition
 
     def project_on_first_person(self, array, entity):
         entity_position_array = self.get_position_in_entity(entity)

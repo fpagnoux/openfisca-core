@@ -57,7 +57,7 @@ class Simulation(object):
             for entity_definition in self.tax_benefit_system.entities
         }
 
-        self.persons = self.get_entity_objects(self.tax_benefit_system.person_entity)
+        self.persons = self.get_entity(self.tax_benefit_system.person_entity)
 
     def calculate(self, column_name, period = None, **parameters):
         if period is None:
@@ -311,7 +311,7 @@ class Simulation(object):
 
     def get_variable_entity(self, variable_name):
         column = self.tax_benefit_system.get_column(variable_name, check_existence = True)
-        return self.get_entity_objects(column.entity)
+        return self.get_entity(column.entity)
 
-    def get_entity_objects(self, entity_class):
-        return self.entities[entity_class.key]
+    def get_entity(self, entity_type):
+        return self.entities[entity_type.key]

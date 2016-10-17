@@ -32,6 +32,7 @@ class Entity(object):
     def __getattr__(self, attribute):
         entity = self.simulation.entities.get(attribute)
         if entity:
+            return EntitySelector(entity, )
             return entity
         else:
             raise AttributeError(attribute)
@@ -39,6 +40,13 @@ class Entity(object):
     @property
     def members(self):
         return self.simulation.entities[self.simulation.tax_benefit_system.person_entity.key]
+
+    @property
+    def first_person(self):
+        def converter(input):
+            return self.sum(input * (self.members_position == 0))
+
+        return EntitySelector(self.simulation.persons, converter)
 
     # Calulations
 
@@ -162,3 +170,19 @@ class Entity(object):
         with warnings.catch_warnings():  # Avoid a non-relevant warning
             warnings.simplefilter("ignore")
             return np.full(self.count, value)
+
+class EntitySelector():
+    def __init__(self, parent, converter):
+        self.parent = parent
+        self.converter = converter
+
+    def calculate(self, variable_name, period = None):
+        return self.converter(self.parent.calculate(variable_name, period))
+
+
+    def __getattr__(self, attribute):
+        if hasattr(self.parent, attribute):
+            return self.parent.__getattr__(attribute)
+        else:
+            raise AttributeError(attribute)
+

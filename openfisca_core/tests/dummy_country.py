@@ -17,6 +17,7 @@ TEST_DIRECTORY = path.dirname(path.abspath(__file__))
 
 # Entities
 
+
 class Familles(Entity):
     key = "famille"
     plural = "familles"
@@ -32,6 +33,7 @@ class Familles(Entity):
             'label': u'Enfants'
             }
         ]
+
 
 class Individus(Entity):
     key = "individu"

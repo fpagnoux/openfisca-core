@@ -167,8 +167,6 @@ class DatedFormula(AbstractGroupedFormula):
         array = holder.default_array()
         return holder.put_in_cache(array, period, parameters.get('extra_params'))
 
-
-
     def graph_parameters(self, edges, get_input_variables_and_parameters, nodes, visited):
         """Recursively build a graph of formulas."""
         for dated_formula in self.dated_formulas:
@@ -468,7 +466,6 @@ class SimpleFormula(AbstractFormula):
             else:
                 return function(entity, period, legislation)
 
-
     def filter_role(self, array_or_dated_holder, default = None, entity = None, role = None):
         """Convert a persons array to an entity array, copying only cells of persons having the given role."""
         holder = self.holder
@@ -592,7 +589,7 @@ class SimpleFormula(AbstractFormula):
 
         entity_index_array = simulation.get_entity_id(entity)
 
-        if roles is None: # Here we assume we have only one person per role. Not true with new role.
+        if roles is None:  # Here we assume we have only one person per role. Not true with new role.
             roles = range(entity.roles_count)
         target_array = np.zeros(entity.count, dtype = array.dtype if array.dtype != np.bool else np.int16)
         for role in roles:
@@ -683,13 +680,14 @@ def neutralize_column(column):
 
 
 def new_filled_column(base_function = UnboundLocalError, calculate_output = UnboundLocalError,
-    cerfa_field = UnboundLocalError, column = UnboundLocalError, comments = UnboundLocalError, doc = None,
-    entity = UnboundLocalError, formula_class = UnboundLocalError, is_permanent = UnboundLocalError,
-    label = UnboundLocalError, law_reference = UnboundLocalError, line_number = UnboundLocalError, module = None,
-    name = None, reference_column = None, set_input = UnboundLocalError, source_code = UnboundLocalError,
-    source_file_path = UnboundLocalError, start_date = UnboundLocalError, stop_date = UnboundLocalError,
-    url = UnboundLocalError, **specific_attributes):
-        # Validate arguments.
+  cerfa_field = UnboundLocalError, column = UnboundLocalError, comments = UnboundLocalError, doc = None,
+  entity = UnboundLocalError, formula_class = UnboundLocalError, is_permanent = UnboundLocalError,
+  label = UnboundLocalError, law_reference = UnboundLocalError, line_number = UnboundLocalError, module = None,
+  name = None, reference_column = None, set_input = UnboundLocalError, source_code = UnboundLocalError,
+  source_file_path = UnboundLocalError, start_date = UnboundLocalError, stop_date = UnboundLocalError,
+  url = UnboundLocalError, **specific_attributes):
+
+    # Validate arguments.
 
     if reference_column is not None:
         assert isinstance(reference_column, columns.Column)

@@ -17,7 +17,6 @@ class Entity(object):
     def get_role_enum(cls):
         return Enum(map(lambda role: role['key'], cls.roles))
 
-
     def __init__(self, simulation):
         self.simulation = simulation
         self.entity = self.__class__
@@ -27,7 +26,6 @@ class Entity(object):
         self.members_role = None
         self.members_legacy_role = None
         self.members_position = None
-
 
     # To add when building the simulation
 
@@ -114,9 +112,9 @@ class Entity(object):
 
     def value_from_person(self, array, role, default = 0):
         # TODO: Make sure the role is unique
-        result = self.filled_array(entity, default)
+        result = self.filled_array(default)
         role_filter = (self.members_role == role)
-        entity_filter = self.any_in_entity(role_filter, entity)
+        entity_filter = self.any_in_entity(role_filter)
 
         result[entity_filter] = array[role_filter]
 

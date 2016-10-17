@@ -54,7 +54,7 @@ class Simulation(object):
         self.entities = {
             entity_definition.key: entity_definition(self)
             for entity_definition in self.tax_benefit_system.entities
-        }
+            }
 
         self.persons = self.get_entity(self.tax_benefit_system.person_entity)
 

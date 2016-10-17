@@ -13,8 +13,7 @@ from setuptools import find_packages
 
 from . import conv, legislations, legislationsxml
 from variables import AbstractVariable
-from formulas import neutralize_column, new_filled_column, SimpleFormula
-from columns import IntCol, EnumCol
+from formulas import neutralize_column
 
 log = logging.getLogger(__name__)
 
@@ -64,7 +63,6 @@ class TaxBenefitSystem(object):
         # Later: Find which one is the person one
 
         self.person_entity = entities[0]
-
 
     @property
     def base_tax_benefit_system(self):

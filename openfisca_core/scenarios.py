@@ -127,7 +127,7 @@ class AbstractScenario(object):
                         steps_count * persons_step_size,
                         dtype = np.int32
                         )
-                    entity.members_role = person_entity_roles = np.empty(
+                    entity.members_role = np.empty(
                         steps_count * persons_step_size,
                         dtype = np.int32
                         )
@@ -685,6 +685,7 @@ def set_entities_json_id(entities_json):
         if 'id' not in entity_json:
             entity_json['id'] = index
     return entities_json
+
 
 def iter_over_entity_members(entity_description, scenario_entity):
         # One by one, yield individu_position, individu_role, individu_id

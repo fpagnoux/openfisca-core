@@ -3,7 +3,6 @@
 from copy import deepcopy
 
 from openfisca_core.tools import assert_near
-from openfisca_core.tests import dummy_country
 from dummy_country import Familles, Individus
 from test_countries import tax_benefit_system
 
@@ -24,12 +23,12 @@ ROLES_DANS_FAMILLE = Familles.get_role_enum()
 PARENT = ROLES_DANS_FAMILLE['parents']
 ENFANT = ROLES_DANS_FAMILLE['enfants']
 
+
 def new_simulation(test_case):
     return tax_benefit_system.new_scenario().init_from_test_case(
         period = 2013,
         test_case = test_case
-    ).new_simulation()
-
+        ).new_simulation()
 
 
 def test_role_index_and_positions():
@@ -38,6 +37,7 @@ def test_role_index_and_positions():
     assert_near(simulation.get_entity(Familles).members_legacy_role, [0, 1, 2, 3, 0, 2])
     assert_near(simulation.get_entity(Familles).members_entity_id, [0, 0, 0, 0, 1, 1])
     assert_near(simulation.get_entity(Familles).members_position, [0, 1, 2, 3, 0, 1])
+
 
 def test_project():
     test_case = deepcopy(TEST_CASE)
@@ -54,6 +54,7 @@ def test_project():
     af_projete_parents = familles.project(af, role = PARENT)
     assert_near(af_projete_parents, [20000, 20000, 0, 0, 0, 0])
 
+
 def test_project_on_first_person():
     test_case = deepcopy(TEST_CASE)
     test_case['familles'][0]['af'] = 20000
@@ -66,6 +67,7 @@ def test_project_on_first_person():
     af_projete = familles.project_on_first_person(af)
 
     assert_near(af_projete, [20000, 0, 0, 0, 5000, 0])
+
 
 def test_share_between_members():
     test_case = deepcopy(TEST_CASE)
@@ -81,6 +83,7 @@ def test_share_between_members():
 
     assert_near(af_shared, [10000, 10000, 0, 0, 5000, 0])
 
+
 def test_sum():
     test_case = deepcopy(TEST_CASE)
     test_case['individus'][0]['salaire_net'] = 1000
@@ -91,7 +94,6 @@ def test_sum():
     simulation = new_simulation(test_case)
     familles = simulation.get_entity(Familles)
 
-
     salaire_net = familles.members.calculate('salaire_net')
     salaire_total_par_famille = familles.sum(salaire_net)
 
@@ -101,6 +103,7 @@ def test_sum():
 
     assert_near(salaire_total_parents_par_famille, [2500, 3000])
 
+
 def test_any():
     test_case = deepcopy(TEST_CASE_AGES)
     simulation = new_simulation(test_case)
@@ -109,7 +112,7 @@ def test_any():
     age = familles.members.calculate('age')
     condition_age = (age <= 18)
     has_famille_member_with_age_inf_18 = familles.any(condition_age)
-    assert_near(has_famille_member_with_age_inf_18, [True,False])
+    assert_near(has_famille_member_with_age_inf_18, [True, False])
 
     condition_age_2 = (age > 18)
     has_famille_enfant_with_age_sup_18 = familles.any(condition_age_2, role = ENFANT)
@@ -144,6 +147,7 @@ def test_max():
     age_max_enfants = familles.max(age, role = ENFANT)
     assert_near(age_max_enfants, [9, 20])
 
+
 def test_min():
     test_case = deepcopy(TEST_CASE_AGES)
     simulation = new_simulation(test_case)
@@ -156,6 +160,7 @@ def test_min():
 
     age_min_parents = familles.min(age, role = PARENT)
     assert_near(age_min_parents, [37, 54])
+
 
 def test_swap():
     test_case = deepcopy(TEST_CASE)
@@ -172,5 +177,3 @@ def test_swap():
     salaire_conjoint = individus.famille.swap(salaire_net, role = PARENT)
 
     assert_near(salaire_conjoint, [1500, 1000, 0, 0, 0, 0])
-
-

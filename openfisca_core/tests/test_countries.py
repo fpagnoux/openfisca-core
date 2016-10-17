@@ -16,9 +16,11 @@ from openfisca_core.tools import assert_near
 
 # Input variables
 
+
 class af(Variable):
     column = FloatCol
     entity = Familles
+
 
 class age_en_mois(Variable):
     column = IntCol
@@ -132,8 +134,7 @@ class salaire_imposable(Variable):
 
     def function(individu, period):
         period = period.start.period(u'year').offset('first-of')
-
-        dom_tom_famille = individu.famille.calculate('dom_tom',period) # Implicit conversion would be nice
+        dom_tom_famille = individu.famille.calculate('dom_tom', period)  # Implicit conversion would be nice
         dom_tom_individu = individu.famille.project(dom_tom_famille)
 
         salaire_net = individu.calculate('salaire_net', period)
@@ -152,6 +153,7 @@ class salaire_net(Variable):
 
         return period, salaire_brut * 0.8
 
+
 class csg(Variable):
     column = FloatCol
     entity = Individus
@@ -164,6 +166,7 @@ class csg(Variable):
 
         return period, taux * salaire_brut
 
+
 class TestTaxBenefitSystem(DummyTaxBenefitSystem):
     def __init__(self):
         DummyTaxBenefitSystem.__init__(self)
@@ -172,6 +175,7 @@ class TestTaxBenefitSystem(DummyTaxBenefitSystem):
         self.add_variables(age_en_mois, birth, depcom, salaire_brut, age, dom_tom, revenu_disponible, revenu_disponible_famille, rsa, salaire_imposable, salaire_net, csg, af)
 
 tax_benefit_system = TestTaxBenefitSystem()
+
 
 def test_input_variable():
     year = 2016
@@ -184,6 +188,7 @@ def test_input_variable():
         ).new_simulation()
     assert_near(simulation.calculate('salaire_brut'), [2000])
 
+
 def test_basic_calculation():
     year = 2016
 
@@ -194,6 +199,7 @@ def test_basic_calculation():
             ),
         ).new_simulation()
     assert_near(simulation.calculate('salaire_net'), [1600])
+
 
 def test_params():
     year = 2013
@@ -206,7 +212,6 @@ def test_params():
         ).new_simulation()
     assert_near(simulation.calculate('csg'), [102])
 
-test_params()
 
 def test_1_axis():
     year = 2013

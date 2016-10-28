@@ -52,9 +52,9 @@ class Simulation(object):
         self.compact_legislation_by_instant_cache = {}
         self.reference_compact_legislation_by_instant_cache = {}
 
-        self.build_entities()
+        self.instanciate_entities()
 
-    def build_entities(self):
+    def instanciate_entities(self):
         self.persons = self.tax_benefit_system.person_entity(self)
         self.entities = {self.persons.key: self.persons}
 

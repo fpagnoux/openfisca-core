@@ -9,14 +9,12 @@ class Tracer(object):
     def start(self, variable_name, period):
         key = "{}<{}>".format(variable_name, period).encode('utf-8')
         current = self.stack[-1]
-        if not current.get(key):
-            current[key] = {'dependencies' : {}}
+        if not current.get(key):  # Variable has already been computed
+            current[key] = {}
         self.stack.append(current[key])
-        self.stack.append(current[key]['dependencies'])
 
     def stop(self, variable_name, period, result):
-        self.stack.pop()  # Get out of dependencies
         current = self.stack[-1]
-        current['value'] = str(result)
+        current['_value_'] = str(result)
         self.stack.pop()  # Get out of current node
 

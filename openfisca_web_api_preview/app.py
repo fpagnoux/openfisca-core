@@ -137,6 +137,54 @@ def create_app(country_package = os.environ.get('COUNTRY_PACKAGE'),
 
         return jsonify(simulation.tracer.trace)
 
+    @app.route('/debug2', methods=['POST'])
+    def debug2():
+        tax_benefit_system = data['tax_benefit_system']
+        request.on_json_loading_failed = handle_invalid_json
+        input_data = request.get_json()
+        try:
+            simulation = Simulation(tax_benefit_system = tax_benefit_system, simulation_json = input_data)
+        except SituationParsingError as e:
+            abort(make_response(jsonify(e.error), e.code or 400))
+
+        requested_computations = dpath.util.search(input_data, '*/*/*/*', afilter = lambda t: t is None, yielded = True)
+
+        for computation in requested_computations:
+            path = computation[0]
+            entity_plural, entity_id, variable_name, period = path.split('/')
+            result = simulation.calculate(variable_name, period).tolist()
+            entity = simulation.get_entity(plural = entity_plural)
+            entity_index = entity.ids.index(entity_id)
+            entity_result = result[entity_index]
+
+            variable = tax_benefit_system.get_column(variable_name)
+            if isinstance(variable, EnumCol):
+                entity_result = variable.enum._vars[entity_result]
+
+            dpath.util.set(input_data, path, entity_result)
+
+
+        for entity in simulation.entities.itervalues():
+            for variable_name, holder in entity._holders.iteritems():
+                if not holder._array_by_period:
+                    period = '*'
+                    array = holder._array
+                    for value, idx in zip(array, range(len(array))):
+                        entity_name = entity.ids[idx]
+                        path = '/'.join([entity.plural, entity_name, variable_name, str(period)])
+                        dpath.util.new(input_data, path, str(value))
+
+                for period, array in holder._array_by_period.iteritems():
+                    if isinstance(array, dict):
+                        array = array[array.keys()[0]]
+                    for value, idx in zip(array, range(len(array))):
+                        entity_name = entity.ids[idx]
+                        path = '/'.join([entity.plural, entity_name, variable_name, str(period)])
+                        dpath.util.new(input_data, path, str(value))
+                        print('')
+
+        return jsonify(input_data)
+
     @app.after_request
     def apply_headers(response):
         response.headers.extend({

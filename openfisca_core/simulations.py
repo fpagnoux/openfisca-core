@@ -17,11 +17,11 @@ class Simulation(object):
     debug_all = False  # When False, log only formula calls with non-default parameters.
     period = None
     baseline_parameters_at_instant_cache = None
-    stack_trace = None
+    stack_trace = None  # Deprecated
     steps_count = 1
     tax_benefit_system = None
     trace = False
-    traceback = None
+    traceback = None  # Deprecated
 
     def __init__(
             self,
@@ -38,7 +38,7 @@ class Simulation(object):
 
             This way of initialising a simulation, still under experimentation, aims at replacing the initialisation from `scenario.make_json_or_python_to_attributes`.
 
-            If no simulation_json is give, initilalises an empty simulation.
+            If no simulation_json is given, initilalises an empty simulation.
         """
         self.tax_benefit_system = tax_benefit_system
         assert tax_benefit_system is not None
@@ -61,8 +61,8 @@ class Simulation(object):
             self.trace = True
         self.opt_out_cache = opt_out_cache
         if debug or trace:
-            self.stack_trace = collections.deque()
-            self.traceback = collections.OrderedDict()
+            self.stack_trace = collections.deque()  # Deprecated
+            self.traceback = collections.OrderedDict()  # Deprecated
 
         # Note: Since simulations are short-lived and must be fast, don't use weakrefs for cache.
         self._parameters_at_instant_cache = {}
@@ -165,12 +165,6 @@ class Simulation(object):
     def compute(self, column_name, period, **parameters):
         if period is not None and not isinstance(period, periods.Period):
             period = periods.period(period)
-        if (self.debug or self.trace) and self.stack_trace:
-            variable_infos = (column_name, period)
-            calling_frame = self.stack_trace[-1]
-            caller_input_variables_infos = calling_frame['input_variables_infos']
-            if variable_infos not in caller_input_variables_infos:
-                caller_input_variables_infos.append(variable_infos)
         holder = self.get_variable_entity(column_name).get_holder(column_name)
         result = holder.compute(period = period, **parameters)
         return result
@@ -178,36 +172,18 @@ class Simulation(object):
     def compute_add(self, column_name, period, **parameters):
         if period is not None and not isinstance(period, periods.Period):
             period = periods.period(period)
-        if (self.debug or self.trace) and self.stack_trace:
-            variable_infos = (column_name, period)
-            calling_frame = self.stack_trace[-1]
-            caller_input_variables_infos = calling_frame['input_variables_infos']
-            if variable_infos not in caller_input_variables_infos:
-                caller_input_variables_infos.append(variable_infos)
         holder = self.get_variable_entity(column_name).get_holder(column_name)
         return holder.compute_add(period = period, **parameters)
 
     def compute_divide(self, column_name, period, **parameters):
         if period is not None and not isinstance(period, periods.Period):
             period = periods.period(period)
-        if (self.debug or self.trace) and self.stack_trace:
-            variable_infos = (column_name, period)
-            calling_frame = self.stack_trace[-1]
-            caller_input_variables_infos = calling_frame['input_variables_infos']
-            if variable_infos not in caller_input_variables_infos:
-                caller_input_variables_infos.append(variable_infos)
         holder = self.get_variable_entity(column_name).get_holder(column_name)
         return holder.compute_divide(period = period, **parameters)
 
     def get_array(self, column_name, period):
         if period is not None and not isinstance(period, periods.Period):
             period = periods.period(period)
-        if (self.debug or self.trace) and self.stack_trace:
-            variable_infos = (column_name, period)
-            calling_frame = self.stack_trace[-1]
-            caller_input_variables_infos = calling_frame['input_variables_infos']
-            if variable_infos not in caller_input_variables_infos:
-                caller_input_variables_infos.append(variable_infos)
         return self.get_variable_entity(column_name).get_holder(column_name).get_array(period)
 
     def _get_parameters_at_instant(self, instant):

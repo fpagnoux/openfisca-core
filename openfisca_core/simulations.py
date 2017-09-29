@@ -8,6 +8,7 @@ from os import linesep
 import dpath
 
 import periods
+from tracers import Tracer
 from commons import empty_clone, stringify_array
 
 
@@ -69,6 +70,7 @@ class Simulation(object):
         self.baseline_parameters_at_instant_cache = {}
 
         self.instantiate_entities(simulation_json)
+        self.tracer = Tracer()
 
     def instantiate_entities(self, simulation_json):
         if simulation_json:

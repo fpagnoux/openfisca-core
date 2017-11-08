@@ -16,15 +16,18 @@ from columns import make_column_from_variable
 class DatedHolder(object):
     """A wrapper of the value of a variable for a given period (and possibly a given set of extra parameters).
     """
+    extra_params = None
     holder = None
     period = None
-    extra_params = None
+    value = None
 
     def __init__(self, holder, period, value, extra_params = None):
         self.holder = holder
         self.period = period
-        self.extra_params = extra_params
-        self.value = value
+        if extra_params is not None:
+            self.extra_params = extra_params
+        if value is not None:
+            self.value = value
 
     @property
     def array(self):

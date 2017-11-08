@@ -54,6 +54,7 @@ class DatedHolder(object):
 class Holder(object):
     _array = None  # Only used when variable.definition_period == ETERNITY
     _array_by_period = None  # Only used when variable.definition_period != ETERNITY
+    _hits_by_period = None
     variable = None
     entity = None
     formula = None
@@ -234,6 +235,15 @@ class Holder(object):
                         return values.values()[0]
                     return values
         return None
+
+        hits_by_period = self._hits_by_period
+        if hits_by_period is None:
+            self._hits_by_period = hits_by_period = {}
+        hits = hits_by_period.get(period)
+        if hits is None:
+            hits = (0, 0)
+        hits_by_period[period] = (hits[0] + 1, hits[1] + 1 if array is None else hits[1])
+        return array
 
     def graph(self, edges, get_input_variables_and_parameters, nodes, visited):
         variable = self.variable

@@ -43,6 +43,24 @@ def test_formula_neutralization():
     assert_near(disposable_income_reform, 0)
 
 
+def test_default_variable_neutralization():
+    class test_rempli_obligation_scolaire_neutralization(Reform):
+        def apply(self):
+            self.neutralize_column('rempli_obligation_scolaire')
+
+    reform = test_rempli_obligation_scolaire_neutralization(tax_benefit_system)
+
+    year = 2013
+    scenario = reform.new_scenario().init_single_entity(
+        period = year,
+        famille = dict(depcom = '75101'),
+        parent1 = dict(),
+        )
+    simulation = scenario.new_simulation(reference = True)
+    rempli_obligation_scolaire = simulation.calculate('rempli_obligation_scolaire')
+    assert_near(rempli_obligation_scolaire, [True], absolute_error_margin = 0)
+
+
 def test_neutralization_optimization():
     reform = test_basic_income_neutralization(tax_benefit_system)
 

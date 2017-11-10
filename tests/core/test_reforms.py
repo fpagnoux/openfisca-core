@@ -61,7 +61,7 @@ def test_default_variable_neutralization():
     scenario = reform.new_scenario().init_from_attributes(
         period = period,
         )
-    simulation = scenario.new_simulation(reference = True)
+    simulation = scenario.new_simulation(use_baseline = True)
     rempli_obligation_scolaire = simulation.calculate('rempli_obligation_scolaire', period)
     assert_near(rempli_obligation_scolaire, [True], absolute_error_margin = 0)
 

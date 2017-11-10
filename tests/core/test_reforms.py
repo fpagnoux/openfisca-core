@@ -46,7 +46,7 @@ def test_formula_neutralization():
 def test_default_variable_neutralization():
     class test_rempli_obligation_scolaire_neutralization(Reform):
         def apply(self):
-            self.neutralize_column('rempli_obligation_scolaire')
+            self.neutralize_variable('rempli_obligation_scolaire')
 
     reform = test_rempli_obligation_scolaire_neutralization(tax_benefit_system)
 

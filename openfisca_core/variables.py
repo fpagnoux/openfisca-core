@@ -157,6 +157,7 @@ class Variable(object):
         self.definition_period = self.set(attr, 'definition_period', required = True, allowed_values = (MONTH, YEAR, ETERNITY))
         self.label = self.set(attr, 'label', allowed_type = basestring, setter = self.set_label)
         self.end = self.set(attr, 'end', allowed_type = basestring, setter = self.set_end)
+        self.allow_infinite = self.set(attr, 'allow_infinite', allowed_type = bool, default = False)
         self.reference = self.set(attr, 'reference', setter = self.set_reference)
         self.cerfa_field = self.set(attr, 'cerfa_field', allowed_type = (basestring, dict))
         self.unit = self.set(attr, 'unit', allowed_type = basestring)

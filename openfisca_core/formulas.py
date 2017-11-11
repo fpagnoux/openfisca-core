@@ -500,15 +500,16 @@ class Formula(object):
             u"<http://openfisca.org/doc/coding-the-legislation/25_vectorial_computing.html.>"
             ]))
         if variable.value_type in [float, int]:
-            if array.dtype != 'timedelta64[Y]':  # Cannot check isnan for timedelta
+            if array.dtype != 'timedelta64[Y]' and array.dtype != 'timedelta64[M]':  # Cannot check for timedelta
                 assert not np.isnan(np.sum(array)), u"Function {}@{}<{}> returned nan values : {}".format(
                     variable.name, entity.key, str(period), array).encode('utf-8')
-                assert np.isfinite(array).all(), u"Function {}@{}<{}> returned nonfinite values : {}".format(
-                    variable.name, entity.key, str(period), array).encode('utf-8')
-                assert (array > - 1e9).all(), u"Function {}@{}<{}> returned values smaller than -1e9: {}".format(
-                    variable.name, entity.key, str(period), array).encode('utf-8')
-                assert (array < 1e9).all(), u"Function {}@{}<{}> returned values larger than 1e9: {}".format(
-                    variable.name, entity.key, str(period), array).encode('utf-8')
+                if not variable.allow_infinite:
+                    assert np.isfinite(array).all(), u"Function {}@{}<{}> returned nonfinite values : {}".format(
+                        variable.name, entity.key, str(period), array).encode('utf-8')
+                    assert (array > - 1e9).all(), u"Function {}@{}<{}> returned values smaller than -1e9: {}".format(
+                        variable.name, entity.key, str(period), array).encode('utf-8')
+                    assert (array < 1e9).all(), u"Function {}@{}<{}> returned values larger than 1e9: {}".format(
+                        variable.name, entity.key, str(period), array).encode('utf-8')
         entity_count = entity.count
         assert array.size == entity_count, \
             u"Function {}@{}<{}>() --> <{}>{} returns an array of size {}, but size {} is expected for {}".format(

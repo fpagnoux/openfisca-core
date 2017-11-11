@@ -499,16 +499,16 @@ class Formula(object):
             u"Learn more about Numpy arrays and vectorial computing:",
             u"<http://openfisca.org/doc/coding-the-legislation/25_vectorial_computing.html.>"
             ]))
-        if isinstance(column, columns.FloatCol) or isinstance(column, columns.IntCol):
-            if array.dtype != 'timedelta64[Y]' and not isinstance(column, columns.AgeCol):
+        if variable.value_type in [float, int]:
+            if array.dtype != 'timedelta64[Y]':  # Cannot check isnan for timedelta
                 assert not np.isnan(np.sum(array)), u"Function {}@{}<{}> returned nan values : {}".format(
-                    column.name, entity.key, str(period), array).encode('utf-8')
+                    variable.name, entity.key, str(period), array).encode('utf-8')
                 assert np.isfinite(array).all(), u"Function {}@{}<{}> returned nonfinite values : {}".format(
-                    column.name, entity.key, str(period), array).encode('utf-8')
+                    variable.name, entity.key, str(period), array).encode('utf-8')
                 assert (array > - 1e9).all(), u"Function {}@{}<{}> returned values smaller than -1e9: {}".format(
-                    column.name, entity.key, str(period), array).encode('utf-8')
+                    variable.name, entity.key, str(period), array).encode('utf-8')
                 assert (array < 1e9).all(), u"Function {}@{}<{}> returned values larger than 1e9: {}".format(
-                    column.name, entity.key, str(period), array).encode('utf-8')
+                    variable.name, entity.key, str(period), array).encode('utf-8')
         entity_count = entity.count
         assert array.size == entity_count, \
             u"Function {}@{}<{}>() --> <{}>{} returns an array of size {}, but size {} is expected for {}".format(

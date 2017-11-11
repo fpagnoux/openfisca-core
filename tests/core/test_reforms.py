@@ -17,7 +17,8 @@ tax_benefit_system = CountryTaxBenefitSystem()
 
 
 class rempli_obligation_scolaire(Variable):
-    column = BoolCol(default = True)
+    value_type =  bool
+    default_value = True
     entity = Person
     label = u"La personne rempli ses obligations scolaires"
     definition_period = MONTH

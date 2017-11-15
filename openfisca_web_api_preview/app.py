@@ -132,6 +132,8 @@ def create_app(tax_benefit_system,
             entity_plural, entity_id, variable_name, period = path.split('/')
             simulation.calculate(variable_name, period).tolist()
 
+        # TODO: Cast values to list
+
         return jsonify({
             "trace": simulation.tracer.trace,
             "entitiesDescription": {entity.plural: entity.ids for entity in simulation.entities.itervalues()},

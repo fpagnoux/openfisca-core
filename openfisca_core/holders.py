@@ -351,7 +351,7 @@ class Holder(object):
                 self.variable.name in simulation.tax_benefit_system.cache_blacklist):
             return DatedHolder(self, period, value, extra_params)
 
-        return self.put_in_disk_cache(value, period, extra_params)
+        return self.put_in_memory_cache(value, period, extra_params)
 
     def put_in_memory_cache(self, value, period, extra_params = None):
 
@@ -389,7 +389,7 @@ class Holder(object):
         if self.variable.is_neutralized:
             return DatedHolder(self, period, value = self.default_array())
 
-        return self.get_from_disk_cache(period, extra_params)
+        return self.get_from_memory_cache(period, extra_params)
 
     def get_extra_param_names(self, period):
         function = self.formula.find_function(period)

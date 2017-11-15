@@ -230,6 +230,8 @@ def _run_test(period_str, test, verbose = False, options = {}):
     scenario.suggest()
     simulation = scenario.new_simulation(trace = verbose)
     output_variables = test.get(u'output_variables')
+    import time
+    start_time = time.time()
     if output_variables is not None:
         try:
             for variable_name, expected_value in output_variables.iteritems():
@@ -251,6 +253,15 @@ def _run_test(period_str, test, verbose = False, options = {}):
                         relative_error_margin = relative_error_margin,
                         )
         finally:
+            # computed = sum([value['dependencies'] for value in simulation.tracer.trace.values()], [])
+            # from collections import Counter
+            # counter = Counter(computed)
+            # most_common = counter.most_common()
+
+
+            # import nose.tools; nose.tools.set_trace()
+            # import ipdb; ipdb.set_trace()
+            log.warn("--- %s seconds ---" % (time.time() - start_time))
             if verbose:
                 print("Computation log:")
                 simulation.tracer.print_computation_log()

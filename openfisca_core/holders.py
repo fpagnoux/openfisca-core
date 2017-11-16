@@ -377,10 +377,9 @@ class Holder(object):
 
     def put_in_disk_cache(self, value, period, extra_params = None):
         tmp_dir = self.get_tmp_dir()
-        filename = ETERNITY if self.variable.definition_period == ETERNITY else str(period)
-        path = os.path.join(tmp_dir, filename)
-        disk_cache = np.memmap(path, dtype=value.dtype, shape=value.shape, mode="w+")
-        disk_cache[:] = value
+        filename = (ETERNITY if self.variable.definition_period == ETERNITY else str(period))
+        path = os.path.join(tmp_dir, filename) + '.npy'
+        np.save(path, value)
         return DatedHolder(self, period, value, extra_params)
 
     def put_in_cache(self, value, period, extra_params = None):
@@ -424,7 +423,7 @@ class Holder(object):
                 self.variable.name in simulation.tax_benefit_system.cache_blacklist):
             return DatedHolder(self, period, value, extra_params)
 
-        return self.put_in_memory_cache(value, period, extra_params)
+        return self.put_in_disk_cache(value, period, extra_params)
 
     def put_in_memory_cache(self, value, period, extra_params = None):
 
@@ -451,18 +450,17 @@ class Holder(object):
     def get_from_disk_cache(self, period, extra_params = None):
         tmp_dir = self.get_tmp_dir()
         filename = ETERNITY if self.variable.definition_period == ETERNITY else str(period)
-        path = os.path.join(tmp_dir, filename)
+        path = os.path.join(tmp_dir, filename) + '.npy'
         value = None
         if os.path.isfile(path):
-            value = np.memmap(path, dtype = self.variable.dtype, mode='r', shape = (self.entity.count,))
+            value = np.load(path)
         return DatedHolder(self, period, value, extra_params)
-
 
     def get_from_cache(self, period, extra_params = None):
         if self.variable.is_neutralized:
             return DatedHolder(self, period, value = self.default_array())
 
-        return self.get_from_memory_cache(period, extra_params)
+        return self.get_from_disk_cache(period, extra_params)
 
     def get_extra_param_names(self, period):
         function = self.formula.find_function(period)

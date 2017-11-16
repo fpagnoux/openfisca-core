@@ -311,6 +311,8 @@ class Holder(object):
 
     def put_in_disk_cache(self, value, period, extra_params = None):
         filename = (ETERNITY if self.variable.definition_period == ETERNITY else str(period))
+        if extra_params:
+            filename = '{}_{}'.format(filename, '_'.join([str(param) for param in extra_params]))
         path = os.path.join(self.data_store_dir, filename) + '.npy'
         np.save(path, value)
         return DatedHolder(self, period, value, extra_params)
@@ -372,6 +374,8 @@ class Holder(object):
 
     def get_from_disk_cache(self, period, extra_params = None):
         filename = ETERNITY if self.variable.definition_period == ETERNITY else str(period)
+        if extra_params:
+            filename = '{}_{}'.format(filename, '_'.join([str(param) for param in extra_params]))
         path = os.path.join(self.data_store_dir, filename) + '.npy'
         value = None
         if os.path.isfile(path):

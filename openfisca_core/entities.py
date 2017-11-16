@@ -375,7 +375,6 @@ class GroupEntity(Entity):
     def roles_count(self, roles_count):
         self._roles_count = roles_count
 
-
     #  Aggregation persons -> entity
 
     def sum(self, array, role = None):

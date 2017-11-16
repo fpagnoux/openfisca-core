@@ -42,6 +42,7 @@ def test_get_memory_usage():
 
 def test_cache_disk():
     simulation = get_simulation()
+    simulation.cache_on_disk = True
     month = period('2017-01')
     holder = simulation.person.get_holder('salary')
     data = np.asarray([2000, 3000, 0, 500])
@@ -52,6 +53,7 @@ def test_cache_disk():
 
 def test_cache_disk_with_extra_params():
     simulation = get_simulation()
+    simulation.cache_on_disk = True
     month = period('2017-01')
     extra_param_1 = period('2017-02')
     extra_param_2 = period('2017-03')

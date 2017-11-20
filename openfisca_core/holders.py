@@ -292,6 +292,11 @@ class Holder(object):
         return np.load(values)
 
     def get_array(self, period, extra_params = None):
+        """
+        Get the value of the variable for the given period (and possibly a list of extra parameters).
+
+        If the value is not known, return ``None``.
+        """
         if period and not isinstance(period, periods.Period):
             period = periods.period(period)
         value = self.get_value_from_memory(period, extra_params)
@@ -379,7 +384,7 @@ class Holder(object):
                 return [ETERNITY]
             else:
                 return []
-        return self._array_by_period.keys()
+        return self._array_by_period.keys() + self.disk_cache.keys()
 
     @property
     def real_formula(self):

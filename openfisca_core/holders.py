@@ -21,6 +21,8 @@ if MAX_MEMORY_OCCUPATION is not None:
 log = logging.getLogger(__name__)
 
 
+WHITE_LIST = set(['tns_autres_revenus', 'f2ch', 'rev_coll_individu', 'f2ee', 'chomage_net', 'indemnites_stage', 'pensions_alimentaires_versees_individu', 'categorie_salarie', 'revenu_assimile_salaire_apres_abattements', 'f2tr', 'f2ts', 'tns_benefice_exploitant_agricole', 'tns_micro_entreprise_benefice', 'f2da', 'rpns_individu', 'retraite_nette', 'f2dh', 'salaire_de_base', 'ppa_rsa_derniers_revenus_tns_annuels_connus', 'salaire_imposable', 'f2dc', 'tns_auto_entrepreneur_benefice', 'en_couple', 'pensions_alimentaires_percues', 'salaire_net', 'indemnites_chomage_partiel', 'revenus_stage_formation_pro', 'age', 'aah'])
+
 class DatedHolder(object):
     """
         A wrapper of the value of a variable for a given period (and possibly a given set of extra parameters).
@@ -473,7 +475,7 @@ class Holder(object):
                 )
             self.simulation.cache_on_disk = True
 
-        if self.simulation.cache_on_disk:
+        if self.simulation.cache_on_disk and self.variable.name not in WHITE_LIST:
             return self.put_in_disk_cache(value, period, extra_params)
         return self.put_in_memory_cache(value, period, extra_params)
 

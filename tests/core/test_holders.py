@@ -25,6 +25,20 @@ def test_delete_arrays():
     assert_equal(simulation.person('salary', '2018-01'), 0)
 
 
+def test_delete_arrays_on_disk():
+    simulation = get_simulation()
+    simulation.cache_on_disk = True
+    salary_holder = simulation.person.get_holder('salary')
+    salary_holder.set_input(period(2017), np.asarray([30000]))
+    salary_holder.set_input(period(2018), np.asarray([60000]))
+    assert_equal(simulation.person('salary', '2017-01'), 2500)
+    assert_equal(simulation.person('salary', '2018-01'), 5000)
+    salary_holder.delete_arrays(period = 2018)
+    salary_holder.set_input(period(2018), np.asarray([15000]))
+    assert_equal(simulation.person('salary', '2017-01'), 2500)
+    assert_equal(simulation.person('salary', '2018-01'), 1250)
+
+
 def test_cache_disk():
     simulation = get_simulation()
     simulation.cache_on_disk = True

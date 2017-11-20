@@ -233,7 +233,6 @@ class Holder(object):
             self._array_by_period = {}
         if period is None:
             self.disk_cache = {}
-            # TODO: Remove files
         if period is not None:
             if not isinstance(period, periods.Period):
                 period = periods.period(period)
@@ -248,7 +247,6 @@ class Holder(object):
                 for cache_period, value in self.disk_cache.iteritems()
                 if not period.contains(cache_period)
                 }
-            # TODO: Remove files
 
     def get_value_from_memory(self, period, extra_params = None):
         if self.variable.definition_period == ETERNITY:

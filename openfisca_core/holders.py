@@ -243,7 +243,6 @@ class Holder(object):
         if period is None:
             self.disk_cache = {}
             # TODO: Remove files
-
         if period is not None:
             if not isinstance(period, periods.Period):
                 period = periods.period(period)

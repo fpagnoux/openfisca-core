@@ -280,6 +280,11 @@ class Holder(object):
         return np.load(values)
 
     def get_array(self, period, extra_params = None):
+        """
+        Get the value of the variable for the given period (and possibly a list of extra parameters).
+
+        If the value is not known, return ``None``.
+        """
         if period and not isinstance(period, periods.Period):
             period = periods.period(period)
         value = self.get_value_from_memory(period, extra_params)
@@ -289,6 +294,9 @@ class Holder(object):
             return self.get_value_from_disk(period, extra_params)
 
     def known_periods(self):
+        """
+        Get the list of periods the variable value is known for
+        """
         if self.variable.definition_period == ETERNITY:
             if self.array is not None:
                 return [ETERNITY]

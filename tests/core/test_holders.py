@@ -40,6 +40,20 @@ def test_get_memory_usage():
     assert_equal(memory_usage['total_nb_bytes'], 4 * 12 * 1)
 
 
+def test_delete_arrays_on_disk():
+    simulation = get_simulation()
+    simulation.cache_on_disk = True
+    salary_holder = simulation.person.get_holder('salary')
+    salary_holder.set_input(period(2017), np.asarray([30000]))
+    salary_holder.set_input(period(2018), np.asarray([60000]))
+    assert_equal(simulation.person('salary', '2017-01'), 2500)
+    assert_equal(simulation.person('salary', '2018-01'), 5000)
+    salary_holder.delete_arrays(period = 2018)
+    salary_holder.set_input(period(2018), np.asarray([15000]))
+    assert_equal(simulation.person('salary', '2017-01'), 2500)
+    assert_equal(simulation.person('salary', '2018-01'), 1250)
+
+
 def test_cache_disk():
     simulation = get_simulation()
     simulation.cache_on_disk = True
@@ -77,4 +91,4 @@ def test_known_periods():
     data = np.asarray([2000, 3000, 0, 500])
     holder.put_in_disk_cache(data, month)
     holder.put_in_memory_cache(data, month_2)
-    assert_items_equal(holder.known_periods(), [month, month_2])
+    assert_items_equal(holder.get_known_periods(), [month, month_2])

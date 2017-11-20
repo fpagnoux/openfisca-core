@@ -290,6 +290,14 @@ class Holder(object):
         if self.simulation.cache_on_disk:
             return self.get_value_from_disk(period, extra_params)
 
+    def known_periods(self):
+        if self.variable.definition_period == ETERNITY:
+            if self.array is not None:
+                return [ETERNITY]
+            else:
+                return []
+        return self._array_by_period.keys() + self.disk_cache.keys()
+
     # def record_hit(self, period):
     #     hits_by_period = self._hits_by_period
     #     if hits_by_period is None:

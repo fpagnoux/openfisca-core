@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-from nose.tools import assert_equal, assert_items_equal
+from nose.tools import assert_equal, assert_items_equal, assert_is_none
 
 from openfisca_core.simulations import Simulation
-from openfisca_core.periods import period
+from openfisca_core.periods import period, ETERNITY
 from openfisca_core.tools import assert_near
 from openfisca_country_template.situation_examples import single
 from test_countries import tax_benefit_system
@@ -12,6 +12,22 @@ from test_countries import tax_benefit_system
 
 def get_simulation():
     return Simulation(tax_benefit_system = tax_benefit_system, simulation_json = single)
+
+
+def test_permanent_variable_empty():
+    simulation = get_simulation()
+    holder = simulation.person.get_holder('birth')
+    assert_is_none(holder.get_array(None))
+
+
+def test_permanent_variable_filled():
+    simulation = get_simulation()
+    holder = simulation.person.get_holder('birth')
+    value = np.asarray(['1980-01-01'], dtype = holder.variable.dtype)
+    holder.set_input(period(ETERNITY), value)
+    assert_equal(holder.get_array(None), value)
+    assert_equal(holder.get_array(ETERNITY), value)
+    assert_equal(holder.get_array('2016-01'), value)
 
 
 def test_delete_arrays():

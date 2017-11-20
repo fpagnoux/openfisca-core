@@ -6,8 +6,6 @@ import numpy as np
 
 from . import periods
 
-# TODO: Adapt base_functions to cache disk
-
 # This is the same than requested_period_default_value...
 def permanent_default_value(formula, simulation, period, *extra_params):
     if formula.find_function(period) is not None:
@@ -54,6 +52,7 @@ def requested_period_last_value(formula, simulation, period, *extra_params, **kw
     if accept_future_value:
         next_period = known_periods[-1]
         return holder.get_array(next_period, extra_params)
+    return holder.default_array()
 
 
 def requested_period_last_or_next_value(formula, simulation, period, *extra_params):

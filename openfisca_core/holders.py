@@ -4,6 +4,7 @@
 from __future__ import division
 import warnings
 import os
+import shutil
 
 import numpy as np
 
@@ -550,6 +551,12 @@ class OnDiskStorage(object):
     def get_known_periods(self):
         return self._files.keys()
 
+    def __del__(self):
+        shutil.rmtree(self.storage_dir)  # Remove the holder temporary files
+        # If the simulation temporary directory is empty, remove it
+        parent_dir = os.path.abspath(os.path.join(self.storage_dir, os.pardir))
+        if not os.listdir(parent_dir):
+            shutil.rmtree(parent_dir)
 
 class InMemoryStorage(object):
 

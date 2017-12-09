@@ -4,12 +4,16 @@
 import warnings
 from os import linesep
 import tempfile
+import logging
 
 import dpath
 
 import periods
 from commons import empty_clone
 from tracers import Tracer
+
+
+log = logging.getLogger(__name__)
 
 
 class Simulation(object):
@@ -28,7 +32,8 @@ class Simulation(object):
             tax_benefit_system = None,
             trace = False,
             opt_out_cache = False,
-            simulation_json = None
+            simulation_json = None,
+            max_memory_occupation = None,
             ):
         """
             If a simulation_json is given, initilalises a simulation from a JSON dictionnary.
@@ -59,18 +64,23 @@ class Simulation(object):
         # Note: Since simulations are short-lived and must be fast, don't use weakrefs for cache.
         self._parameters_at_instant_cache = {}
         self.baseline_parameters_at_instant_cache = {}
-        self._data_store_dir = None
-        self.cache_on_disk = False
+        self.max_memory_occupation = max_memory_occupation
+        self._data_storage_dir = None
         self.instantiate_entities(simulation_json)
 
     @property
-    def data_store_dir(self):
+    def data_storage_dir(self):
         """
         Temporary folder used to store intermediate calculation data in case the memory is saturated
         """
-        if self._data_store_dir is None:
-            self._data_store_dir = tempfile.mkdtemp(prefix = "openfisca_")
-        return self._data_store_dir
+        if self._data_storage_dir is None:
+            self._data_storage_dir = tempfile.mkdtemp(prefix = "openfisca_")
+            log.warn((
+                    u"Memory usage reached {}%. "
+                    u"Intermediate results will now be stored on disk in {}. "
+                    u"You should remove this directory once you're done with your simulation."
+                    ).format(self.max_memory_occupation, self._data_storage_dir).encode('utf-8'))
+        return self._data_storage_dir
 
     def instantiate_entities(self, simulation_json):
         if simulation_json:

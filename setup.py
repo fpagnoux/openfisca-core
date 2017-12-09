@@ -50,6 +50,7 @@ setup(
         'lxml >= 3.7',
         'dpath == 1.4.0',
         'jsonschema >= 2.6',
+        'psutil == 5.4.2'
         ],
     message_extractors = {
         'openfisca_core': [

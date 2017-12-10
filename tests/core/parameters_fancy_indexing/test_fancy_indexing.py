@@ -12,7 +12,7 @@ LOCAL_DIR = os.path.dirname(os.path.abspath(__file__))
 
 parameters = ParameterNode(directory_path = LOCAL_DIR)
 
-P = parameters.rate._get_at_instant('2015-01-01')
+P = parameters.rate.get_at_instant('2015-01-01')
 
 
 def test_on_leaf():
@@ -71,7 +71,7 @@ def test_inhomogenous():
             }
         }))
 
-    P = parameters.rate._get_at_instant('2015-01-01')
+    P = parameters.rate.get_at_instant('2015-01-01')
     housing_occupancy_status = np.asarray(['owner', 'owner', 'tenant', 'tenant'])
     try:
         P.couple[housing_occupancy_status]
@@ -92,7 +92,7 @@ def test_inhomogenous_2():
             }
         }))
 
-    P = parameters.rate._get_at_instant('2015-01-01')
+    P = parameters.rate.get_at_instant('2015-01-01')
     housing_occupancy_status = np.asarray(['owner', 'owner', 'tenant', 'tenant'])
     try:
         P.couple[housing_occupancy_status]
@@ -114,7 +114,7 @@ def test_inhomogenous_3():
             }
         }))
 
-    P = parameters.rate._get_at_instant('2015-01-01')
+    P = parameters.rate.get_at_instant('2015-01-01')
     zone = np.asarray(['z1', 'z2', 'z2', 'z1'])
     try:
         P.couple.tenant[zone]
@@ -124,7 +124,7 @@ def test_inhomogenous_3():
         raise
 
 
-P_2 = parameters.local_tax._get_at_instant('2015-01-01')
+P_2 = parameters.local_tax.get_at_instant('2015-01-01')
 
 
 def test_with_properties_starting_by_number():
@@ -132,7 +132,7 @@ def test_with_properties_starting_by_number():
     assert_near(P_2[city_code], [100, 300, 200])
 
 
-P_3 = parameters.bareme._get_at_instant('2015-01-01')
+P_3 = parameters.bareme.get_at_instant('2015-01-01')
 
 
 @raises(NotImplementedError)

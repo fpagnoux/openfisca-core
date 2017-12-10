@@ -289,41 +289,9 @@ class Holder(object):
             dtype = self.variable.dtype,
             )
 
-<<<<<<< HEAD
-        if self._array is not None:
-            # self._array is only used when definition period is ETERNITY"
-            usage.update(dict(
-                nb_arrays = 1,
-                total_nb_bytes = self._array.nbytes,
-                cell_size = self._array.itemsize,
-                ))
-            return usage
-        elif self._array_by_period:
-            nb_arrays = sum([
-                len(array_or_dict) if isinstance(array_or_dict, dict) else 1
-                for array_or_dict in self._array_by_period.itervalues()
-                ])
-            array = self._array_by_period.values()[0]
-            if isinstance(array, dict):
-                array = array.values()[0]
-            usage.update(dict(
-                nb_arrays = nb_arrays,
-                total_nb_bytes = array.nbytes * nb_arrays,
-                cell_size = array.itemsize,
-                ))
-            return usage
-        else:
-            usage.update(dict(
-                nb_arrays = 0,
-                total_nb_bytes = 0,
-                cell_size = np.nan,
-                ))
-            return usage
-=======
         usage.update(self.memory_storage.get_memory_usage())
 
         return usage
->>>>>>> Big refactor
 
     def get_known_periods(self):
         """

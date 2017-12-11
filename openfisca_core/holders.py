@@ -291,6 +291,13 @@ class Holder(object):
 
         usage.update(self.memory_storage.get_memory_usage())
 
+        if self.simulation.trace:
+            usage_stats = self.simulation.tracer.usage_stats[self.variable.name]
+            usage.update(dict(
+                nb_requests = usage_stats['nb_requests'],
+                nb_requests_by_array = usage_stats['nb_requests'] / float(usage['nb_arrays'])
+                ))
+
         return usage
 
     def get_known_periods(self):

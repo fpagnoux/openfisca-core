@@ -57,6 +57,19 @@ def test_get_memory_usage():
     assert_equal(memory_usage['total_nb_bytes'], 4 * 12 * 1)
 
 
+def test_get_memory_usage_with_trace():
+    simulation = get_simulation(trace = True)
+    salary_holder = simulation.person.get_holder('salary')
+    salary_holder.set_input(period(2017), np.asarray([30000]))
+    simulation.calculate('salary', '2017-01')
+    simulation.calculate('salary', '2017-01')
+    simulation.calculate('salary', '2017-02')
+    simulation.calculate_add('salary', '2017') # 12 calculations
+    memory_usage = salary_holder.get_memory_usage()
+    assert_equal(memory_usage['nb_requests'], 15)
+    assert_equal(memory_usage['nb_requests_by_array'], 1.25)  # 15 calculations / 12 arrays
+
+
 def test_delete_arrays_on_disk():
     simulation = get_simulation(max_memory_occupation = 0)  # Force using disk
     salary_holder = simulation.person.get_holder('salary')

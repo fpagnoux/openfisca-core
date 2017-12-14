@@ -4,7 +4,7 @@ import os
 
 import yaml
 
-from enum import Enum
+from indexedenums import Enum
 
 
 OPEN_API_CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), os.path.pardir, 'openAPI.yml')

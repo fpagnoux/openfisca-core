@@ -8,7 +8,8 @@ from os import linesep
 import numpy as np
 import dpath
 
-from enum import Enum
+from indexedenums import Enum, EnumArray
+from formula_helpers import where
 from formulas import ADD, DIVIDE
 from scenarios import iter_over_entity_members
 from simulations import check_type, SituationParsingError
@@ -428,6 +429,8 @@ class GroupEntity(Entity):
                 )
         self.simulation.persons.check_array_compatible_with_entity(array)
         result = self.filled_array(default, dtype = array.dtype)
+        if isinstance(array, EnumArray):
+            result = EnumArray(result, array.enum)
         role_filter = self.members.has_role(role)
         entity_filter = self.any(role_filter)
 
@@ -447,7 +450,7 @@ class GroupEntity(Entity):
         self.check_array_compatible_with_entity(array)
         self.check_role_validity(role)
         role_condition = self.members.has_role(role) if role is not None else True
-        return np.where(role_condition, array[self.members_entity_id], 0)
+        return where(role_condition, array[self.members_entity_id], 0)
 
     # Does it really make sense ? Should not we use roles instead of position when projecting on someone in particular ?
     # Doesn't seem to be used, maybe should just not introduce
@@ -456,7 +459,7 @@ class GroupEntity(Entity):
         entity_position_array = self.members_position
         entity_index_array = self.members_entity_id
         position_filter = (entity_position_array == 0)
-        return np.where(position_filter, array[entity_index_array], 0)
+        return where(position_filter, array[entity_index_array], 0)
 
     def share_between_members(self, array, role = None):
         self.check_array_compatible_with_entity(array)

@@ -6,12 +6,12 @@ import warnings
 import os
 
 import numpy as np
-from enum import Enum
 
 from . import periods
 from .commons import empty_clone
 from .periods import MONTH, YEAR, ETERNITY
 from columns import make_column_from_variable
+from indexedenums import Enum, EnumArray
 
 
 class DatedHolder(object):
@@ -275,14 +275,22 @@ class Holder(object):
                 error_message
                 )
 
-        if self.variable.value_type == Enum and array.dtype.kind in {'U', 'S'}:  # String array
-            enum = self.variable.possible_values
-            array = np.select([array == item.name for item in enum], [item for item in enum])
-
         self.formula.set_input(period, array)
+
+    def encode_enum(self, array):
+        enum = self.variable.possible_values
+        if array.dtype.kind in {'U', 'S'}:  # String array
+            enum = self.variable.possible_values
+            array = np.select([array == item.name for item in enum], [item.index for item in enum]).astype(self.variable.dtype)
+        elif array.dtype.kind == 'O':  # Enum items arrays
+            array = np.select([array == item for item in enum], [item.index for item in enum]).astype(self.variable.dtype)
+        return EnumArray(array, enum)
 
     def put_in_cache(self, value, period, extra_params = None):
         simulation = self.simulation
+
+        if self.variable.value_type == Enum:
+            value = self.encode_enum(value)
 
         if self.variable.definition_period != ETERNITY:
             if period is None:
@@ -379,6 +387,9 @@ class Holder(object):
     def default_array(self):
         array_size = self.entity.count
         array = np.empty(array_size, dtype = self.variable.dtype)
+        if self.variable.value_type == Enum:
+            array.fill(self.variable.default_value.index)
+            return EnumArray(array, self.variable.possible_values)
         array.fill(self.variable.default_value)
         return array
 

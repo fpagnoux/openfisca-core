@@ -4,7 +4,7 @@ import datetime
 import inspect
 import textwrap
 
-from enum import Enum
+from indexedenums import Enum
 
 
 def get_next_day(date):

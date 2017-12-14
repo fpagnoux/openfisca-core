@@ -5,7 +5,7 @@
 
 
 import numpy as np
-
+from indexedenums import EnumArray
 
 def apply_thresholds(input, thresholds, choices):
     """
@@ -54,3 +54,17 @@ def concat(this, that):
         that = that.astype('str')
 
     return np.core.defchararray.add(this, that)
+
+
+def where(conditions, output_if_true, output_if_false):
+    result = np.where(conditions, output_if_true, output_if_false)
+    if isinstance(output_if_true, EnumArray): # TODO: if output_if_false est une énum
+        return EnumArray(result, output_if_true.enum)
+    return result
+
+
+def select(conditions, values, default):
+    result = np.select(conditions, values, default)
+    if isinstance(values[0], EnumArray):
+        return EnumArray(result, values[0].enum)
+    return result

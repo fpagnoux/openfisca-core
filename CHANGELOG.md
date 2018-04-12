@@ -1,5 +1,83 @@
 # Changelog
 
+# 23.0.0 []()
+
+
+#### Breaking changes
+
+- Remove deprecated `base_function`:
+  - `permanent_default_value`
+  - `requested_period_added_value`
+
+In `Holder`:
+  - Remove deprecated constructor `Holder(simulation, variable)`
+    - Use `Holder(entity, variable)` instead
+  - Remove attributes:
+    - `formula` and `real_formula`
+      - Use `variable.formulas` instead
+    - `array`
+      - Use `get_array(period)` instead
+  - Remove methods:
+    - `calculate` and `compute`
+      - Use `simulation.calculate` instead
+    - `calculate_output`
+      - Use `simulation.calculate_output` instead
+    - `compute_add`
+      - Use `simulation.calculate_add` instead
+    - `compute_divide`
+      - Use `simulation.calculate_divide` instead
+    - `get_from_cache`
+      - Use `get_array` instead
+    - `graph`
+  - Methods `set_input` and `put_in_cache` don't return anything anymore.
+
+In `Simulation`:
+- Remove attributes:
+  - `holder_by_name`
+    - Use `simulation.get_holder(...)` or `entity.get_holder(...)` instead
+- Remove methods:
+  - `compute`
+    - Use `calculate` instead
+  - `compute_add`
+    - Use `calculate_add` instead
+  - `compute_divide`
+      - Use `calculate_divide` instead
+  - `graph`
+  - `to_input_variables_json`
+
+
+
+
+
+#### Technical changes
+
+- Remove module `formulas` and class `Formula`
+  - Variables's formulas are now simple functions.
+- Remove class `DatedHolder`
+  - All calculation methods now return a simple numpy array
+
+
+
+
+
+- Make `holder.set_input` more flexible
+  - It now accepts a string as `period`
+  - It now accepts a list as `array`
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ### 22.0.5 [#639](https://github.com/openfisca/openfisca-core/pull/639)
 
 * Update country-template dependency to >= 3.0.0, < 4.0.0

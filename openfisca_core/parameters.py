@@ -82,13 +82,13 @@ class ParameterParsingError(Exception):
 
 
 class PlaceHolder(object):
-  def __init__(self, child, instant):
-    self.child = child
-    self.instant = instant
+    def __init__(self, child, instant):
+        self.child = child
+        self.instant = instant
 
-  def resolve(self):
-    print('Resolving {} for intant {}'.format(self.child.name, self.instant))
-    return self.child._get_at_instant(self.instant)
+    def resolve(self):
+        print('Resolving {} for intant {}'.format(self.child.name, self.instant))
+        return self.child._get_at_instant(self.instant)
 
 
 class Parameter(object):
@@ -421,20 +421,49 @@ class ParameterNodeAtInstant(object):
         self._instant_str = instant_str
         self._children = {}
         for child_name, child in node.children.iteritems():
-            child_at_instant = child._get_at_instant(instant_str)
-            if child_at_instant is not None:
-                self._children[child_name] = child_at_instant
-                setattr(self, child_name, child_at_instant)
+            place_holder =  PlaceHolder(child, instant_str)
+            # child_at_instant = child._get_at_instant(instant_str)
+            self._children[child_name] = place_holder
+            setattr(self, child_name, place_holder)
 
     def __getattr__(self, key):
         param_name = _compose_name(self._name, key)
         raise ParameterNotFound(param_name, self._instant_str)
 
+    def __getattribute__(self, name):
+        attribute = object.__getattribute__(self, name)
+
+        if not isinstance(attribute, PlaceHolder):
+          return attribute
+
+        return self.resolve_child(name)
+
+
     def __getitem__(self, key):
         # If fancy indexing is used, cast to a vectorial node
         if isinstance(key, np.ndarray):
             return VectorialParameterNodeAtInstant.build_from_node(self)[key]
-        return self._children[key]
+
+        value = self._children[key]
+
+        if not isinstance(value, PlaceHolder):
+            return value
+
+        return self.resolve_child(key)
+
+    def resolve_child(self, child_name):
+        value = self._children[child_name].resolve()
+        setattr(self, child_name, value)
+        self._children[child_name] = value
+        return value
+
+    def resolve(self, deep = False):
+        for child_name, child in self._children.iteritems():
+            if isinstance(child, PlaceHolder):
+                child = self.resolve_child(child_name)
+            if deep and isinstance(child, ParameterNodeAtInstant):
+                child.resolve(deep = True)
+        return self
 
     def __iter__(self):
         return iter(self._children)
@@ -455,6 +484,7 @@ class VectorialParameterNodeAtInstant(object):
 
     @staticmethod
     def build_from_node(node):
+        node.resolve(deep = True)
         VectorialParameterNodeAtInstant.check_node_vectorisable(node)
         subnodes_name = node._children.keys()
         # Recursively vectorize the children of the node

@@ -680,24 +680,24 @@ class Scale(object):
         return self._get_at_instant(instant)
 
     def _get_at_instant(self, instant):
-        brackets = [bracket.get_at_instant(instant) for bracket in self.brackets]
+        brackets = [bracket.get_at_instant(instant).resolve() for bracket in self.brackets]
 
-        if any('amount' in bracket._children for bracket in brackets):
+        if any(bracket._children.get('amount') is not None for bracket in brackets):
             scale = taxscales.AmountTaxScale()
             for bracket in brackets:
-                if 'amount' in bracket._children and 'threshold' in bracket._children:
+                if bracket._children.get('amount') is not None and bracket._children.get('threshold') is not None:
                     amount = bracket.amount
                     threshold = bracket.threshold
                     scale.add_bracket(threshold, amount)
-        elif any('average_rate' in bracket._children for bracket in brackets):
+        elif any(bracket._children.get('average_rate') is not None for bracket in brackets):
             scale = taxscales.LinearAverageRateTaxScale()
 
             for bracket in brackets:
-                if 'base' in bracket._children:
+                if bracket._children.get('base') is not None:
                     base = bracket.base
                 else:
                     base = 1.
-                if 'average_rate' in bracket._children and 'threshold' in bracket._children:
+                if bracket._children.get('average_rate') is not None and bracket._children.get('threshold') is not None:
                     average_rate = bracket.average_rate
                     threshold = bracket.threshold
                     scale.add_bracket(threshold, average_rate * base)
@@ -706,14 +706,17 @@ class Scale(object):
             scale = taxscales.MarginalRateTaxScale()
 
             for bracket in brackets:
-                if 'base' in bracket._children:
+                if bracket._children.get('base') is not None:
                     base = bracket.base
                 else:
                     base = 1.
-                if 'rate' in bracket._children and 'threshold' in bracket._children:
+                if bracket._children.get('rate') is not None and bracket._children.get('threshold') is not None:
                     rate = bracket.rate
                     threshold = bracket.threshold
-                    scale.add_bracket(threshold, rate * base)
+                    try:
+                        scale.add_bracket(threshold, rate * base)
+                    except:
+                        from nose.tools import set_trace; set_trace(); import ipdb; ipdb.set_trace()
             return scale
 
     def __getitem__(self, key):

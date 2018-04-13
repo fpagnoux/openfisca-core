@@ -81,6 +81,16 @@ class ParameterParsingError(Exception):
         super(ParameterParsingError, self).__init__(message)
 
 
+class PlaceHolder(object):
+  def __init__(self, child, instant):
+    self.child = child
+    self.instant = instant
+
+  def resolve(self):
+    print('Resolving {} for intant {}'.format(self.child.name, self.instant))
+    return self.child._get_at_instant(self.instant)
+
+
 class Parameter(object):
     """
         A parameter of the legislation. Parameters can change over time.

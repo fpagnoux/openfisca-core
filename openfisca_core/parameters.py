@@ -87,7 +87,7 @@ class PlaceHolder(object):
         self.instant = instant
 
     def resolve(self):
-        print('Resolving {} for intant {}'.format(self.child.name, self.instant))
+        # print('Resolving {} for intant {}'.format(self.child.name, self.instant))
         return self.child._get_at_instant(self.instant)
 
 
@@ -457,12 +457,18 @@ class ParameterNodeAtInstant(object):
         self._children[child_name] = value
         return value
 
-    def resolve(self, deep = False):
+    def resolve(self, deep = False, cleanup = False):
+        to_clenup = []
         for child_name, child in self._children.iteritems():
             if isinstance(child, PlaceHolder):
                 child = self.resolve_child(child_name)
+                if child is None:
+                    to_clenup.append(child_name)
             if deep and isinstance(child, ParameterNodeAtInstant):
-                child.resolve(deep = True)
+                child.resolve(deep = True, cleanup = cleanup)
+        if cleanup:
+            for key in to_clenup:
+                del self._children[key]
         return self
 
     def __iter__(self):
@@ -484,7 +490,7 @@ class VectorialParameterNodeAtInstant(object):
 
     @staticmethod
     def build_from_node(node):
-        node.resolve(deep = True)
+        node.resolve(deep = True, cleanup = True)
         VectorialParameterNodeAtInstant.check_node_vectorisable(node)
         subnodes_name = node._children.keys()
         # Recursively vectorize the children of the node

@@ -1,5 +1,11 @@
 # Changelog
 
+### 22.0.9 [#654](https://github.com/openfisca/openfisca-core/pull/654)
+
+* Fix `dtype` attribute for `EnumArray`s (returned when calculating a variable of `value_type` `Enum`):
+  - It was the type `np.int16` and not the dtype instance `np.dtype(np.int16)`
+  - This caused issue when trying to export an `EnumArray` with `pandas`
+
 ### 22.0.8 [#646](https://github.com/openfisca/openfisca-core/pull/639)
 
 * Fix `entity.max`, `entity.min`, `entity.all` and `entity.reduce` for multi-entities simulations.

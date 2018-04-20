@@ -35,6 +35,9 @@ class Entity(object):
             self.ids = []
             self.step_size = 0
 
+    def __repr__(self):
+        return u'{}Array([{}])'.format(self.label, self.ids).encode('utf-8')
+
     def init_from_json(self, entities_json):
         """
             Initilalises entities from a JSON dictionnary.
@@ -343,8 +346,10 @@ class GroupEntity(Entity):
             self._members_position = None
             self.members_legacy_role = None
         self.members = self.simulation.persons
+        self._members = EntityMatrix(self)
         self._roles_count = None
         self._ordered_members_map = None
+
 
     def split_variables_and_roles_json(self, entity_object):
         entity_object = entity_object.copy()  # Don't mutate function input
@@ -596,6 +601,28 @@ class GroupEntity(Entity):
         origin_entity.check_array_compatible_with_entity(array)
         input_projected = origin_entity.project(array)
         return self.value_from_first_person(input_projected)
+
+
+class EntityMatrix():
+    def __init__(self, entity):
+        self.entity = entity
+
+    def __repr__(self):
+        ids = np.asarray(self.entity.members.ids)
+        ids_matrix = self._get_empty_members_matrix('null', ids.dtype)
+        ids_matrix[self.entity.members_position, self.entity.members_entity_id] = ids
+        return repr(ids_matrix).replace(u'array', u'{}Matrix'.format(self.entity.members.key.capitalize()))
+
+
+    def __call__(self, variable_name, period):
+        array = self.entity.members(variable_name, period)
+        result = self._get_empty_members_matrix(0, array.dtype)
+        result[self.entity.members_position, self.entity.members_entity_id] = array
+        return result
+
+    def _get_empty_members_matrix(self, default_value, dtype):
+        biggest_entity_size = np.max(self.entity.members_position) + 1
+        return np.full((biggest_entity_size, self.entity.count), default_value, dtype)
 
 
 class Role(object):

@@ -15,7 +15,7 @@ from simulations import check_type, SituationParsingError
 from holders import Holder, PeriodMismatchError
 from periods import compare_period_size, period as make_period
 from errors import VariableNotFound
-
+from partial_matrix import PartialMatrix
 
 class Entity(object):
     key = None
@@ -48,7 +48,7 @@ class Entity(object):
         self.entities_json = entities_json
         self.count = len(entities_json)
         self.step_size = self.count  # Related to axes.
-        self.ids = sorted(entities_json.keys())
+        self.ids = np.asarray(sorted(entities_json.keys()))
         for entity_id, entity_object in entities_json.iteritems():
             check_type(entity_object, dict, [self.plural, entity_id])
             if not self.is_person:
@@ -186,13 +186,14 @@ class Entity(object):
         if period is None:
             stack = traceback.extract_stack()
             filename, line_number, function_name, line_of_code = stack[-3]
-            raise ValueError(u'''
-You requested computation of variable "{}", but you did not specify on which period in "{}:{}":
-    {}
-When you request the computation of a variable within a formula, you must always specify the period as the second parameter. The convention is to call this parameter "period". For example:
-    computed_salary = person('salary', period).
-See more information at <http://openfisca.org/doc/coding-the-legislation/35_periods.html#periods-for-variable>.
-'''.format(variable_name, filename, line_number, line_of_code).encode('utf-8'))
+            message = linesep.join([
+                u'You requested computation of variable "{}", but you did not specify on which period in "{}:{}":'
+                '    {}',
+                u'When you request the computation of a variable within a formula, you must always specify the period as the second parameter. The convention is to call this parameter "period". For example:',
+                '    computed_salary = person(\'salary\', period).',
+                u'See more information at <http://openfisca.org/doc/coding-the-legislation/35_periods.html#periods-for-variable>.'
+                ]).format(variable_name, filename, line_number, line_of_code).encode('utf-8')
+            raise ValueError(message)
 
     def __call__(self, variable_name, period = None, options = [], **parameters):
         self.check_variable_defined_for_entity(variable_name)
@@ -345,11 +346,15 @@ class GroupEntity(Entity):
             self._members_role = None
             self._members_position = None
             self.members_legacy_role = None
-        self.members = self.simulation.persons
-        self._members = EntityMatrix(self)
+        self._members = None
         self._roles_count = None
         self._ordered_members_map = None
 
+    @property
+    def members(self):
+        if self._members is not None:
+            return self._members
+        return EntityMatrix(self)
 
     def split_variables_and_roles_json(self, entity_object):
         entity_object = entity_object.copy()  # Don't mutate function input
@@ -425,7 +430,7 @@ class GroupEntity(Entity):
     @property
     def members_position(self):
         if self._members_position is None and self.members_entity_id is not None:
-            # We could use self.count and self.members.count , but with the current initilization, we are not sure count will be set before members_position is called
+            # We could use self.count and self.simulation.persons.count , but with the current initilization, we are not sure count will be set before members_position is called
             nb_entities = np.max(self.members_entity_id) + 1
             nb_persons = len(self.members_entity_id)
             self._members_position = np.empty_like(self.members_entity_id)
@@ -466,15 +471,15 @@ class GroupEntity(Entity):
     @projectable
     def sum(self, array, role = None):
         self.check_role_validity(role)
-        self.simulation.persons.check_array_compatible_with_entity(array)
-        if role is not None:
-            role_filter = self.members.has_role(role)
-            return np.bincount(
-                self.members_entity_id[role_filter],
-                weights = array[role_filter],
-                minlength = self.count)
-        else:
-            return np.bincount(self.members_entity_id, weights = array)
+
+        if not isinstance(array, PartialMatrix):
+            array = self.members.matrixify(array)
+
+        if role is None:
+            return array.sum()
+        role_filter = self.simulation.persons.has_role(role)
+        role_matrix = self.members.matrixify(role_filter)
+        return (role_matrix * array).sum()
 
     @projectable
     def any(self, array, role = None):
@@ -483,10 +488,11 @@ class GroupEntity(Entity):
 
     @projectable
     def reduce(self, array, reducer, neutral_element, role = None):
+        from nose.tools import set_trace; set_trace(); import ipdb; ipdb.set_trace()
         self.simulation.persons.check_array_compatible_with_entity(array)
         self.check_role_validity(role)
         position_in_entity = self.members_position
-        role_filter = self.members.has_role(role) if role is not None else True
+        role_filter = self.simulation.persons.has_role(role) if role is not None else True
         filtered_array = np.where(role_filter, array, neutral_element)
 
         result = self.filled_array(neutral_element)  # Neutral value that will be returned if no one with the given role exists.
@@ -515,7 +521,7 @@ class GroupEntity(Entity):
     @projectable
     def nb_persons(self, role = None):
         if role:
-            role_condition = self.members.has_role(role)
+            role_condition = self.simulation.persons.has_role(role)
             return self.sum(role_condition)
         else:
             return np.bincount(self.members_entity_id)
@@ -534,7 +540,7 @@ class GroupEntity(Entity):
         result = self.filled_array(default, dtype = array.dtype)
         if isinstance(array, EnumArray):
             result = EnumArray(result, array.possible_values)
-        role_filter = self.members.has_role(role)
+        role_filter = self.simulation.persons.has_role(role)
         entity_filter = self.any(role_filter)
 
         result[entity_filter] = array[role_filter]
@@ -572,7 +578,7 @@ class GroupEntity(Entity):
         if role is None:
             return array[self.members_entity_id]
         else:
-            role_condition = self.members.has_role(role)
+            role_condition = self.simulation.persons.has_role(role)
             return np.where(role_condition, array[self.members_entity_id], 0)
 
     # Does it really make sense ? Should not we use roles instead of position when projecting on someone in particular ?
@@ -603,26 +609,36 @@ class GroupEntity(Entity):
         return self.value_from_first_person(input_projected)
 
 
-class EntityMatrix():
+class EntityMatrix(object):
+    """
+        Represents the persons grouped by their entity
+    """
     def __init__(self, entity):
         self.entity = entity
+        self.existence_matrix = self._init_existence_matrix()
+        self.simulation = entity.simulation
+        self.ids = self.matrixify(self.simulation.persons.ids)
 
     def __repr__(self):
-        ids = np.asarray(self.entity.members.ids)
-        ids_matrix = self._get_empty_members_matrix('null', ids.dtype)
-        ids_matrix[self.entity.members_position, self.entity.members_entity_id] = ids
-        return repr(ids_matrix).replace(u'array', u'{}Matrix'.format(self.entity.members.key.capitalize()))
-
+        return u'{}Matrix{}({})'.format(self.simulation.persons.key.capitalize(), linesep, self.ids)
 
     def __call__(self, variable_name, period):
-        array = self.entity.members(variable_name, period)
-        result = self._get_empty_members_matrix(0, array.dtype)
-        result[self.entity.members_position, self.entity.members_entity_id] = array
-        return result
+        array = self.simulation.persons(variable_name, period)
+        return self.matrixify(array)
 
     def _get_empty_members_matrix(self, default_value, dtype):
         biggest_entity_size = np.max(self.entity.members_position) + 1
         return np.full((biggest_entity_size, self.entity.count), default_value, dtype)
+
+    def matrixify(self, array, default_value = 0):
+        result = self._get_empty_members_matrix(default_value, array.dtype)
+        result[self.entity.members_position, self.entity.members_entity_id] = array
+        return PartialMatrix(result, self.existence_matrix)
+
+    def _init_existence_matrix(self):
+        result = self._get_empty_members_matrix(False, np.bool)
+        result[self.entity.members_position, self.entity.members_entity_id] = True
+        return result
 
 
 class Role(object):
@@ -690,7 +706,7 @@ class FirstPersonToEntityProjector(Projector):
 
     def __init__(self, entity, parent = None):
         self.target_entity = entity
-        self.reference_entity = entity.members
+        self.reference_entity = entity.simulation.persons
         self.parent = parent
 
     def transform(self, result):
@@ -702,7 +718,7 @@ class UniqueRoleToEntityProjector(Projector):
 
     def __init__(self, entity, role, parent = None):
         self.target_entity = entity
-        self.reference_entity = entity.members
+        self.reference_entity = entity.simulation.persons
         self.parent = parent
         self.role = role
 

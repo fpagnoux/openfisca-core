@@ -46,20 +46,7 @@ class GroupEntityArray(object):
     return np.full((self._max_nb_persons, self.count), default_value, dtype)
 
 
-class PartialMatrix(np.ndarray):
-    def __new__(cls, matrix, existence_matrix):
-        obj = np.asarray(matrix).view(cls)
-        obj.existence_matrix = existence_matrix
-        return obj
 
-    # See previous comment
-    def __array_finalize__(self, obj):
-        if obj is None:
-            return
-        self.existence_matrix = getattr(obj, 'existence_matrix', None)
-
-entity = GroupEntityArray()
-matrix = entity.members(salaire)
 
 
 import ipdb; ipdb.set_trace()

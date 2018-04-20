@@ -275,6 +275,21 @@ def test_sum():
     assert_near(total_salary_parents_by_household, [2500, 3000])
 
 
+def test_sum_v24():
+    test_case = deepcopy(TEST_CASE)
+    test_case['persons'][0]['salary'] = 1000
+    test_case['persons'][1]['salary'] = 1500
+    test_case['persons'][4]['salary'] = 3000
+    test_case['persons'][5]['salary'] = 500
+
+    simulation = new_simulation(test_case, MONTH)
+
+    salary_sum = simulation.household.members('salary', "2016-01").sum()
+
+    assert_near(salary_sum, [2500, 3500])
+
+    # TODO: filter by role
+
 def test_any():
     test_case = deepcopy(TEST_CASE_AGES)
     simulation = new_simulation(test_case)
@@ -289,6 +304,14 @@ def test_any():
     has_household_CHILD_with_age_sup_18 = household.any(condition_age_2, role = CHILD)
     assert_near(has_household_CHILD_with_age_sup_18, [False, True])
 
+
+def test_any_v24():
+    simulation = new_simulation(TEST_CASE_AGES)
+
+    are_members_under_18 = simulation.household.members('age', MONTH) <= 18
+    assert_near(are_members_under_18.any(), [True, False])
+
+    # TODO: filter by role
 
 def test_all():
     test_case = deepcopy(TEST_CASE_AGES)
@@ -467,29 +490,33 @@ def test_get_memory_usage():
     assert(len(memory_usage['by_variable']) == 1)
 
 
-def test_undoredered_persons():
-    test_case = {
-        'persons': [{'id': 'ind4'}, {'id': 'ind3'}, {'id': 'ind1'}, {'id': 'ind2'}, {'id': 'ind5'}, {'id': 'ind0'}],
-        'households': [
-            {'children': ['ind2', 'ind3'], 'parents': ['ind0', 'ind1']},
-            {'children': ['ind5'], 'parents': ['ind4']}
-            ],
-        }
-    # 1st family
-    test_case['persons'][5]['salary'] = 1000
-    test_case['persons'][2]['salary'] = 1500
-    test_case['persons'][3]['salary'] = 20
+UNORDERED_TEST_CASE = {
+    'persons': [{'id': 'ind4'}, {'id': 'ind3'}, {'id': 'ind1'}, {'id': 'ind2'}, {'id': 'ind5'}, {'id': 'ind0'}],
+    'households': [
+        {'children': ['ind2', 'ind3'], 'parents': ['ind0', 'ind1']},
+        {'children': ['ind5'], 'parents': ['ind4']}
+        ],
+    }
 
-    # 2nd family
-    test_case['persons'][0]['salary'] = 3000
-    test_case['persons'][4]['salary'] = 500
+# 1st family
+UNORDERED_TEST_CASE['persons'][5]['salary'] = 1000
+UNORDERED_TEST_CASE['persons'][2]['salary'] = 1500
+UNORDERED_TEST_CASE['persons'][3]['salary'] = 20
+
+# 2nd family
+UNORDERED_TEST_CASE['persons'][0]['salary'] = 3000
+UNORDERED_TEST_CASE['persons'][4]['salary'] = 500
+
+def test_undoredered_persons():
 
     # household.members_entity_id == array([1, 0, 0, 0, 1, 0], dtype=int32)
 
-    simulation = new_simulation(test_case, MONTH)
+    simulation = new_simulation(UNORDERED_TEST_CASE, MONTH)
     household = simulation.household
 
     salary = household.members('salary', "2016-01")
+    mat = household.members_mat('salary', '2016-01')
+    from nose.tools import set_trace; set_trace(); import ipdb; ipdb.set_trace()
 
     assert_near(household.sum(salary), [2520, 3500])
     assert_near(household.max(salary), [1500, 3000])

@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 import os
+import numpy as np
 from os import linesep
 from flask import Flask, jsonify, abort, request, make_response
 from werkzeug.contrib.fixers import ProxyFix
@@ -111,7 +112,7 @@ def create_app(tax_benefit_system,
                 variable = tax_benefit_system.get_variable(variable_name)
                 result = simulation.calculate(variable_name, period)
                 entity = simulation.get_entity(plural = entity_plural)
-                entity_index = entity.ids.index(entity_id)
+                entity_index = np.where(entity.ids == entity_id)[0][0]
 
                 if variable.value_type == Enum:
                     entity_result = result.decode()[entity_index].name
@@ -152,7 +153,7 @@ def create_app(tax_benefit_system,
 
         return jsonify({
             "trace": trace,
-            "entitiesDescription": {entity.plural: entity.ids for entity in simulation.entities.itervalues()},
+            "entitiesDescription": {entity.plural: entity.ids.tolist() for entity in simulation.entities.itervalues()},
             "requestedCalculations": list(simulation.tracer.requested_calculations)
             })
 

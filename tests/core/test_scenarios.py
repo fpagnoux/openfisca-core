@@ -16,7 +16,7 @@ def get_new_famille():
     simulation = SimulationMockUp()
     famille = Household(simulation)
     simulation.persons = Person(simulation)
-    famille.members = simulation.persons
+    # famille.members = simulation.persons
     return famille
 
 

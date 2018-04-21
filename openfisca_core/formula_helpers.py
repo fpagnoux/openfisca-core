@@ -6,6 +6,10 @@
 
 import numpy as np
 
+from numpy import select
+
+from .partial_matrix import PartialMatrix
+
 
 def apply_thresholds(input, thresholds, choices):
     """
@@ -54,3 +58,10 @@ def concat(this, that):
         that = that.astype('str')
 
     return np.core.defchararray.add(this, that)
+
+
+def where(cond, if_true, if_false):
+    result = np.where(cond, if_true, if_false)
+    if isinstance(cond, PartialMatrix):
+        result = PartialMatrix(result, cond.existence_matrix)
+    return result

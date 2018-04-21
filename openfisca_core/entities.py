@@ -15,7 +15,7 @@ from simulations import check_type, SituationParsingError
 from holders import Holder, PeriodMismatchError
 from periods import compare_period_size, period as make_period
 from errors import VariableNotFound
-from partial_matrix import PartialMatrix
+from partial_matrix import PartialMatrix, PartialEnumMatrix
 
 class Entity(object):
     key = None
@@ -62,7 +62,7 @@ class Entity(object):
         self.finalize_variables_init()
 
     def init_variable_values(self, entity_object, entity_id):
-        entity_index = self.ids.index(entity_id)
+        entity_index = np.where(self.ids == entity_id)[0][0]
         for variable_name, variable_values in entity_object.iteritems():
             path_in_json = [self.plural, entity_id, variable_name]
             try:
@@ -352,9 +352,9 @@ class GroupEntity(Entity):
 
     @property
     def members(self):
-        if self._members is not None:
-            return self._members
-        return EntityMatrix(self)
+        if self._members is None:
+            self._members = GroupByEntityProjector(self)
+        return self._members
 
     def split_variables_and_roles_json(self, entity_object):
         entity_object = entity_object.copy()  # Don't mutate function input
@@ -411,9 +411,9 @@ class GroupEntity(Entity):
                         )
                 self.persons_to_allocate.discard(person_id)
 
-        entity_index = self.ids.index(entity_id)
+        entity_index = np.where(self.ids == entity_id)[0][0]
         for person_role, person_legacy_role, person_id in iter_over_entity_members(self, roles_json):
-            person_index = self.simulation.persons.ids.index(person_id)
+            person_index = np.where(self.simulation.persons.ids == person_id)[0][0]
             self.members_entity_id[person_index] = entity_index
             self.members_role[person_index] = person_role
             self.members_legacy_role[person_index] = person_legacy_role
@@ -488,7 +488,6 @@ class GroupEntity(Entity):
 
     @projectable
     def reduce(self, array, reducer, neutral_element, role = None):
-        from nose.tools import set_trace; set_trace(); import ipdb; ipdb.set_trace()
         self.simulation.persons.check_array_compatible_with_entity(array)
         self.check_role_validity(role)
         position_in_entity = self.members_position
@@ -508,15 +507,33 @@ class GroupEntity(Entity):
 
     @projectable
     def all(self, array, role = None):
-        return self.reduce(array, reducer = np.logical_and, neutral_element = True, role = role)
+        assert isinstance(array, PartialMatrix)
+        if role is not None:
+            role_filter = self.simulation.persons.has_role(role)
+            role_matrix = self.members.matrixify(role_filter)
+            array = PartialMatrix(np.where(role_matrix, array, True), self.members.existence_matrix)
+        return array.all()
+        # return self.reduce(array, reducer = np.logical_and, neutral_element = True, role = role)
 
     @projectable
     def max(self, array, role = None):
-        return self.reduce(array, reducer = np.maximum, neutral_element = - np.infty, role = role)
+        assert isinstance(array, PartialMatrix)
+        if role is not None:
+            role_filter = self.simulation.persons.has_role(role)
+            role_matrix = self.members.matrixify(role_filter)
+            array = PartialMatrix(np.where(role_matrix, array, - np.inf), self.members.existence_matrix)
+        return array.max()
+        # return self.reduce(array, reducer = np.maximum, neutral_element = - np.infty, role = role)
 
     @projectable
     def min(self, array, role = None):
-        return self.reduce(array, reducer = np.minimum, neutral_element = np.infty, role = role)
+        assert isinstance(array, PartialMatrix)
+        if role is not None:
+            role_filter = self.simulation.persons.has_role(role)
+            role_matrix = self.members.matrixify(role_filter)
+            array = PartialMatrix(np.where(role_matrix, array, + np.inf), self.members.existence_matrix)
+        return array.min()
+        # return self.reduce(array, reducer = np.minimum, neutral_element = np.infty, role = role)
 
     @projectable
     def nb_persons(self, role = None):
@@ -609,38 +626,6 @@ class GroupEntity(Entity):
         return self.value_from_first_person(input_projected)
 
 
-class EntityMatrix(object):
-    """
-        Represents the persons grouped by their entity
-    """
-    def __init__(self, entity):
-        self.entity = entity
-        self.existence_matrix = self._init_existence_matrix()
-        self.simulation = entity.simulation
-        self.ids = self.matrixify(self.simulation.persons.ids)
-
-    def __repr__(self):
-        return u'{}Matrix{}({})'.format(self.simulation.persons.key.capitalize(), linesep, self.ids)
-
-    def __call__(self, variable_name, period):
-        array = self.simulation.persons(variable_name, period)
-        return self.matrixify(array)
-
-    def _get_empty_members_matrix(self, default_value, dtype):
-        biggest_entity_size = np.max(self.entity.members_position) + 1
-        return np.full((biggest_entity_size, self.entity.count), default_value, dtype)
-
-    def matrixify(self, array, default_value = 0):
-        result = self._get_empty_members_matrix(default_value, array.dtype)
-        result[self.entity.members_position, self.entity.members_entity_id] = array
-        return PartialMatrix(result, self.existence_matrix)
-
-    def _init_existence_matrix(self):
-        result = self._get_empty_members_matrix(False, np.bool)
-        result[self.entity.members_position, self.entity.members_entity_id] = True
-        return result
-
-
 class Role(object):
 
     def __init__(self, description, entity):
@@ -688,6 +673,44 @@ class Projector(object):
 
     def transform(self, result):
         return NotImplementedError()
+
+
+class GroupByEntityProjector(Projector):
+    """
+        Represents the persons grouped by their entity
+    """
+
+    def __init__(self, entity):
+        self.reference_entity = entity.simulation.persons
+        self.entity = entity
+        self.existence_matrix = self._init_existence_matrix()
+        self.simulation = entity.simulation
+        self.ids = self.matrixify(self.simulation.persons.ids)
+
+    def __repr__(self):
+        return u'{}Matrix{}({})'.format(self.simulation.persons.key.capitalize(), linesep, self.ids)
+
+    def transform(self, result):
+        return self.matrixify(result)
+
+    def _get_empty_members_matrix(self, default_value, dtype):
+        biggest_entity_size = np.max(self.entity.members_position) + 1
+        return np.full((biggest_entity_size, self.entity.count), default_value, dtype)
+
+    def matrixify(self, array, default_value = 0):
+        result = self._get_empty_members_matrix(default_value, array.dtype)
+        try:
+            result[self.entity.members_position, self.entity.members_entity_id] = array
+        except:
+            from nose.tools import set_trace; set_trace(); import ipdb; ipdb.set_trace()
+        if isinstance(array, EnumArray):
+            return PartialEnumMatrix(result, array.possible_values, self.existence_matrix)
+        return PartialMatrix(result, self.existence_matrix)
+
+    def _init_existence_matrix(self):
+        result = self._get_empty_members_matrix(False, np.bool)
+        result[self.entity.members_position, self.entity.members_entity_id] = True
+        return result
 
 
 # For instance person.family

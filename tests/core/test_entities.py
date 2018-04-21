@@ -422,21 +422,24 @@ def test_value_from_first_person():
     assert_near(salary_first_person, [1000, 3000])
 
 
-# def test_projectors_methods():
-#     simulation = Simulation(tax_benefit_system = tax_benefit_system, simulation_json = couple)
-#     household = simulation.household
-#     person = simulation.person
+def test_projectors_methods():
+    simulation = Simulation(tax_benefit_system = tax_benefit_system, simulation_json = couple)
+    household = simulation.household
+    person = simulation.person
 
-#     projected_vector = household.first_parent.has_role(Household.FIRST_PARENT)
-#     assert(len(projected_vector) == 1)  # Must be of a household dimension
+    projected_vector = household.first_parent.has_role(Household.FIRST_PARENT)
+    assert(len(projected_vector) == 1)  # Must be of a household dimension
 
-#     salary_i = person.household.members('salary', '2017-01')
-#     assert(len(person.household.members('salary', '2017-01').sum()) == 2)  # Must be of a person dimension
-#     assert(len(person.household.members('salary', '2017-01').max()) == 2)  # Must be of a person dimension
-#     assert(len(person.household.members('salary', '2017-01').min()) == 2)  # Must be of a person dimension
-#     assert(len(person.household.members('salary', '2017-01').all()) == 2)  # Must be of a person dimension
-#     assert(len(person.household.members('salary', '2017-01').any()) == 2)  # Must be of a person dimension
-#     assert(len(household.first_parent.get_rank(household, salary_i)) == 1)  # Must be of a person dimension
+
+    members = person.household.members
+
+    salary_i = members('salary', '2017-01')
+    assert(len(members('salary', '2017-01').sum()) == 2)  # Must be of a person dimension
+    assert(len(members('salary', '2017-01').max()) == 2)  # Must be of a person dimension
+    assert(len(members('salary', '2017-01').min()) == 2)  # Must be of a person dimension
+    assert(len(members('salary', '2017-01').all()) == 2)  # Must be of a person dimension
+    assert(len(members('salary', '2017-01').any()) == 2)  # Must be of a person dimension
+    assert(len(household.first_parent.get_rank(household, salary_i)) == 1)  # Must be of a person dimension
 
 
 def test_sum_following_bug_ipp_1():

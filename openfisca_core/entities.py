@@ -175,7 +175,9 @@ class Entity(object):
             raise ValueError(message)
 
     def check_array_compatible_with_entity(self, array):
-        if not self.count == array.size:
+        if array.ndim == 1 and not self.count == array.size:
+            raise ValueError(u"Input {} is not a valid value for the entity {}".format(array, self.key))
+        if array.ndim == 2 and not array.shape[1] == self.count:
             raise ValueError(u"Input {} is not a valid value for the entity {}".format(array, self.key))
 
     def check_role_validity(self, role):
@@ -316,11 +318,16 @@ class PersonEntity(Entity):
         filtered_criteria = np.where(condition, criteria, np.inf)
         ids = entity.members_entity_id
 
+        if filtered_criteria.ndim == 2:
+            matrix = filtered_criteria.transpose()
+        else:
+            matrix = np.asarray([
+                entity.value_nth_person(k, filtered_criteria, default = np.inf)
+                for k in range(biggest_entity_size)
+                ]).transpose()
+
+
         # Matrix: the value in line i and column j is the value of criteria for the jth person of the ith entity
-        matrix = np.asarray([
-            entity.value_nth_person(k, filtered_criteria, default = np.inf)
-            for k in range(biggest_entity_size)
-            ]).transpose()
 
         # We double-argsort all lines of the matrix.
         # Double-argsorting gets the rank of each value once sorted
@@ -579,6 +586,8 @@ class GroupEntity(Entity):
         result = self.filled_array(default, dtype = array.dtype)
         # For households that have at least n persons, set the result as the value of criteria for the person for which the position is n.
         # The map is needed b/c the order of the nth persons of each household in the persons vector is not necessarily the same than the household order.
+
+
         result[nb_persons_per_entity > n] = array[members_map][positions[members_map] == n]
 
         return result
@@ -593,7 +602,12 @@ class GroupEntity(Entity):
         self.check_array_compatible_with_entity(array)
         self.check_role_validity(role)
         if role is None:
-            return array[self.members_entity_id]
+            if array.ndim == 1:
+                return array[self.members_entity_id]
+            if array.ndim == 2:
+                result = array[:,self.members_entity_id]
+                result.existence_matrix = array.existence_matrix[:,self.members_entity_id]
+                return result
         else:
             role_condition = self.simulation.persons.has_role(role)
             return np.where(role_condition, array[self.members_entity_id], 0)
@@ -680,12 +694,13 @@ class GroupByEntityProjector(Projector):
         Represents the persons grouped by their entity
     """
 
-    def __init__(self, entity):
+    def __init__(self, entity, parent = None):
         self.reference_entity = entity.simulation.persons
         self.entity = entity
         self.existence_matrix = self._init_existence_matrix()
         self.simulation = entity.simulation
         self.ids = self.matrixify(self.simulation.persons.ids)
+        self.parent = parent
 
     def __repr__(self):
         return u'{}Matrix{}({})'.format(self.simulation.persons.key.capitalize(), linesep, self.ids)
@@ -781,6 +796,8 @@ def get_projector_from_shortcut(entity, shortcut, parent = None):
     else:
         if shortcut == 'first_person':
             return FirstPersonToEntityProjector(entity, parent)
+        if shortcut == 'members':
+            return GroupByEntityProjector(entity, parent)
         role = next((role for role in entity.flattened_roles if (role.max == 1) and (role.key == shortcut)), None)
         if role:
             return UniqueRoleToEntityProjector(entity, role, parent)

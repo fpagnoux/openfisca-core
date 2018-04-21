@@ -43,3 +43,7 @@ class PartialEnumMatrix(PartialMatrix, EnumArray):
             return
         self.existence_matrix = getattr(obj, 'existence_matrix', None)
         self.possible_values = getattr(obj, 'possible_values', None)
+
+    def __eq__(self, other):
+        result = EnumArray.__eq__(self, other)
+        return PartialMatrix(result, self.existence_matrix)

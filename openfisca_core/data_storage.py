@@ -2,12 +2,15 @@
 
 import shutil
 import os
+from typing import Union, Optional
 
 import numpy as np
 
 from openfisca_core import periods
+from openfisca_core.periods import Period
 from openfisca_core.periods import ETERNITY
 from openfisca_core.indexed_enums import EnumArray
+from openfisca_core.types import Array
 
 
 class InMemoryStorage(object):
@@ -19,7 +22,7 @@ class InMemoryStorage(object):
         self._arrays = {}
         self.is_eternal = is_eternal
 
-    def get(self, period):
+    def get(self, period: Period) -> Optional[Array]:
         if self.is_eternal:
             period = periods.period(ETERNITY)
         period = periods.period(period)
@@ -29,7 +32,7 @@ class InMemoryStorage(object):
             return None
         return values
 
-    def put(self, value, period):
+    def put(self, value: Array, period: Period) -> None:
         if self.is_eternal:
             period = periods.period(ETERNITY)
         period = periods.period(period)
@@ -151,3 +154,6 @@ class OnDiskStorage(object):
         parent_dir = os.path.abspath(os.path.join(self.storage_dir, os.pardir))
         if not os.listdir(parent_dir):
             shutil.rmtree(parent_dir)
+
+
+Storage = Union[InMemoryStorage, OnDiskStorage]

@@ -4,16 +4,20 @@ import datetime
 import inspect
 import re
 import textwrap
+import os
 
 import numpy as np
 from sortedcontainers.sorteddict import SortedDict
 from datetime import date
 
 from openfisca_core import periods
+from openfisca_core.periods import Period
 from openfisca_core.entities import Entity
 from openfisca_core.indexed_enums import Enum, EnumArray, ENUM_ARRAY_DTYPE
 from openfisca_core.periods import DAY, MONTH, YEAR, ETERNITY
 from openfisca_core.tools import eval_expression
+from openfisca_core.types import Array
+from openfisca_core.errors import PeriodMismatchError
 
 
 VALUE_TYPES = {
@@ -67,7 +71,7 @@ FORMULA_NAME_PREFIX = 'formula'
 class Variable(object):
     """
 
-    A `variable <https://openfisca.org/doc/key-concepts/variables.html>`_ of the legislation.
+    A `variable <https://oenfisca.org/doc/key-concepts/variables.html>`_ of the legislation.
 
     Main attributes:
 
@@ -326,6 +330,47 @@ class Variable(object):
             Returns True if the variable is an input variable.
         """
         return len(self.formulas) == 0
+
+    def is_inactive(self, period: Period) -> bool:
+        return self.end is not None and period.start.date > self.end
+
+    def check_input_period(self, period: Period) -> None:
+        if self.definition_period == ETERNITY:
+            return None  # For a variable that is constant over time, any input period is valid
+
+        if period is None:
+            raise ValueError('A period must be specified to set values, except for variables with ETERNITY as as period_definition.')
+
+        if period.unit == ETERNITY:
+            error_message = os.linesep.join([
+                'Unable to set a value for variable {0} for ETERNITY.',
+                '{0} is only defined for {1}s. Please adapt your input.',
+                ]).format(
+                    self.name,
+                    self.definition_period
+                )
+            raise PeriodMismatchError(
+                self.name,
+                period,
+                self.definition_period,
+                error_message
+                )
+
+        if (self.definition_period != period.unit or period.size > 1):
+            name = self.name
+            period_size_adj = f'{period.unit}' if (period.size == 1) else f'{period.size}-{period.unit}s'
+            error_message = os.linesep.join([
+                f'Unable to set a value for variable "{name}" for {period_size_adj}-long period "{period}".',
+                f'"{name}" can only be set for one {self.definition_period} at a time. Please adapt your input.',
+                f'If you are the maintainer of "{name}", you can consider adding it a set_input attribute to enable automatic period casting.'
+                ])
+
+            raise PeriodMismatchError(
+                self.name,
+                period,
+                self.definition_period,
+                error_message
+                )
 
     @classmethod
     def get_introspection_data(cls, tax_benefit_system):

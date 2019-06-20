@@ -430,8 +430,9 @@ class Simulation(object):
         """
         variable = self.tax_benefit_system.get_variable(variable_name, check_existence = True)
         period = periods.period(period)
-        if ((variable.end is not None) and (period.start.date > variable.end)):
+        if variable.is_inactive(period):
             return
+        variable.check_input_period(period)
         self.get_holder(variable_name).set_input(period, value)
 
     def get_variable_population(self, variable_name):

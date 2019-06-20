@@ -372,6 +372,25 @@ class Variable(object):
                 error_message
                 )
 
+    def cast_to_array(self, value) -> Array:
+        if self.value_type in (float, int) and isinstance(value, str):
+            value = eval_expression(value)
+        if not isinstance(value, np.ndarray):
+            value = np.asarray(value)
+        if value.ndim == 0:
+            # 0-dim arrays are casted to scalar when they interact with float. We don't want that.
+            value = value.reshape(1)
+        if self.value_type == Enum:
+            value = self.possible_values.encode(value)
+        if value.dtype != self.dtype:
+            try:
+                value = value.astype(self.dtype)
+            except ValueError:
+                raise ValueError(
+                    'Unable to set value "{}" for variable "{}", as the variable dtype "{}" does not match the value dtype "{}".'
+                    .format(value, self.name, self.dtype, value.dtype))
+        return value
+
     @classmethod
     def get_introspection_data(cls, tax_benefit_system):
         """

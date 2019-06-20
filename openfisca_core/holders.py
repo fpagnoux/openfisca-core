@@ -2,7 +2,7 @@
 
 import logging
 import os
-import warnings
+# import warnings
 
 import numpy as np
 import psutil
@@ -10,10 +10,10 @@ import psutil
 from openfisca_core import periods
 from openfisca_core.commons import empty_clone
 from openfisca_core.data_storage import InMemoryStorage, OnDiskStorage
-from openfisca_core.errors import PeriodMismatchError
-from openfisca_core.indexed_enums import Enum
+# from openfisca_core.errors import PeriodMismatchError
+# from openfisca_core.indexed_enums import Enum
 from openfisca_core.periods import MONTH, YEAR, ETERNITY
-from openfisca_core.tools import eval_expression
+# from openfisca_core.tools import eval_expression
 
 log = logging.getLogger(__name__)
 
@@ -139,91 +139,44 @@ class Holder(object):
         return list(self._memory_storage.get_known_periods()) + list((
             self._disk_storage.get_known_periods() if self._disk_storage else []))
 
-    def set_input(self, period, array):
-        """
-            Set a variable's value (``array``) for a given period (``period``)
+    # def set_input(self, period, array):
+    #     """
+    #         Set a variable's value (``array``) for a given period (``period``)
 
-            :param array: the input value for the variable
-            :param period: the period at which the value is setted
+    #         :param array: the input value for the variable
+    #         :param period: the period at which the value is setted
 
-            Example :
+    #         Example :
 
-            >>> holder.set_input([12, 14], '2018-04')
-            >>> holder.get_array('2018-04')
-            >>> [12, 14]
+    #         >>> holder.set_input([12, 14], '2018-04')
+    #         >>> holder.get_array('2018-04')
+    #         >>> [12, 14]
 
+    #         If a ``set_input`` property has been set for the variable, this method may accept inputs for periods not matching the ``definition_period`` of the variable. To read more about this, check the `documentation <https://openfisca.org/doc/coding-the-legislation/35_periods.html#set-input-automatically-process-variable-inputs-defined-for-periods-not-matching-the-definition-period>`_.
+    #     """
+    #     pass
 
-            If a ``set_input`` property has been set for the variable, this method may accept inputs for periods not matching the ``definition_period`` of the variable. To read more about this, check the `documentation <https://openfisca.org/doc/coding-the-legislation/35_periods.html#set-input-automatically-process-variable-inputs-defined-for-periods-not-matching-the-definition-period>`_.
-        """
+    #     return self._set(period, array)
 
-        period = periods.period(period)
-        if period.unit == ETERNITY and self.variable.definition_period != ETERNITY:
-            error_message = os.linesep.join([
-                'Unable to set a value for variable {0} for ETERNITY.',
-                '{0} is only defined for {1}s. Please adapt your input.',
-                ]).format(
-                    self.variable.name,
-                    self.variable.definition_period
-                )
-            raise PeriodMismatchError(
-                self.variable.name,
-                period,
-                self.variable.definition_period,
-                error_message
-                )
-        if self.variable.is_neutralized:
-            warning_message = "You cannot set a value for the variable {}, as it has been neutralized. The value you provided ({}) will be ignored.".format(self.variable.name, array)
-            return warnings.warn(
-                warning_message,
-                Warning
-                )
-        if self.variable.value_type in (float, int) and isinstance(array, str):
-            array = eval_expression(array)
-        if self.variable.set_input:
-            return self.variable.set_input(self, period, array)
-        return self._set(period, array)
-
-    def _to_array(self, value):
-        if not isinstance(value, np.ndarray):
-            value = np.asarray(value)
-        if value.ndim == 0:
-            # 0-dim arrays are casted to scalar when they interact with float. We don't want that.
-            value = value.reshape(1)
-        if len(value) != self.population.count:
-            raise ValueError(
-                'Unable to set value "{}" for variable "{}", as its length is {} while there are {} {} in the simulation.'
-                .format(value, self.variable.name, len(value), self.population.count, self.population.entity.plural))
-        if self.variable.value_type == Enum:
-            value = self.variable.possible_values.encode(value)
-        if value.dtype != self.variable.dtype:
-            try:
-                value = value.astype(self.variable.dtype)
-            except ValueError:
-                raise ValueError(
-                    'Unable to set value "{}" for variable "{}", as the variable dtype "{}" does not match the value dtype "{}".'
-                    .format(value, self.variable.name, self.variable.dtype, value.dtype))
-        return value
+    # def _to_array(self, value):
+    #     if not isinstance(value, np.ndarray):
+    #         value = np.asarray(value)
+    #     if value.ndim == 0:
+    #         # 0-dim arrays are casted to scalar when they interact with float. We don't want that.
+    #         value = value.reshape(1)
+    #     if self.variable.value_type == Enum:
+    #         value = self.variable.possible_values.encode(value)
+    #     if value.dtype != self.variable.dtype:
+    #         try:
+    #             value = value.astype(self.variable.dtype)
+    #         except ValueError:
+    #             raise ValueError(
+    #                 'Unable to set value "{}" for variable "{}", as the variable dtype "{}" does not match the value dtype "{}".'
+    #                 .format(value, self.variable.name, self.variable.dtype, value.dtype))
+    #     return value
 
     def _set(self, period, value):
-        value = self._to_array(value)
-        if self.variable.definition_period != ETERNITY:
-            if period is None:
-                raise ValueError('A period must be specified to set values, except for variables with ETERNITY as as period_definition.')
-            if (self.variable.definition_period != period.unit or period.size > 1):
-                name = self.variable.name
-                period_size_adj = f'{period.unit}' if (period.size == 1) else f'{period.size}-{period.unit}s'
-                error_message = os.linesep.join([
-                    f'Unable to set a value for variable "{name}" for {period_size_adj}-long period "{period}".',
-                    f'"{name}" can only be set for one {self.variable.definition_period} at a time. Please adapt your input.',
-                    f'If you are the maintainer of "{name}", you can consider adding it a set_input attribute to enable automatic period casting.'
-                    ])
-
-                raise PeriodMismatchError(
-                    self.variable.name,
-                    period,
-                    self.variable.definition_period,
-                    error_message
-                    )
+        # value = self._to_array(value)
 
         should_store_on_disk = (
             self._on_disk_storable and
@@ -236,26 +189,26 @@ class Holder(object):
         else:
             self._memory_storage.put(value, period)
 
-    def put_in_cache(self, value, period):
-        if self._do_not_store:
-            return
+    # def put_in_cache(self, value, period):
+    #     if self._do_not_store:
+    #         return
 
-        if (self.simulation.opt_out_cache and
-                self.simulation.tax_benefit_system.cache_blacklist and
-                self.variable.name in self.simulation.tax_benefit_system.cache_blacklist):
-            return
+    #     if (self.simulation.opt_out_cache and
+    #             self.simulation.tax_benefit_system.cache_blacklist and
+    #             self.variable.name in self.simulation.tax_benefit_system.cache_blacklist):
+    #         return
 
-        self._set(period, value)
+    #     self._set(period, value)
 
-    def default_array(self):
-        """
-        Return a new array of the appropriate length for the entity, filled with the variable default values.
-        """
+    # def default_array(self):
+    #     """
+    #     Return a new array of the appropriate length for the entity, filled with the variable default values.
+    #     """
 
-        return self.variable.default_array(self.population.count)
+    #     return self.variable.default_array(self.population.count)
 
 
-def set_input_dispatch_by_period(holder, period, array):
+def set_input_dispatch_by_period(simulation, variable, period, array):
     """
         This function can be declared as a ``set_input`` attribute of a variable.
 
@@ -263,14 +216,14 @@ def set_input_dispatch_by_period(holder, period, array):
 
         To read more about ``set_input`` attributes, check the `documentation <https://openfisca.org/doc/coding-the-legislation/35_periods.html#set-input-automatically-process-variable-inputs-defined-for-periods-not-matching-the-definition-period>`_.
     """
-    array = holder._to_array(array)
+    array = variable.cast_to_array(array)
 
     period_size = period.size
     period_unit = period.unit
 
-    if holder.variable.definition_period == MONTH:
+    if variable.definition_period == MONTH:
         cached_period_unit = periods.MONTH
-    elif holder.variable.definition_period == YEAR:
+    elif variable.definition_period == YEAR:
         cached_period_unit = periods.YEAR
     else:
         raise ValueError('set_input_dispatch_by_period can be used only for yearly or monthly variables.')
@@ -280,9 +233,9 @@ def set_input_dispatch_by_period(holder, period, array):
     # Cache the input data, skipping the existing cached months
     sub_period = period.start.period(cached_period_unit)
     while sub_period.start < after_instant:
-        existing_array = holder.get_array(sub_period)
+        existing_array = simulation.get_array(variable.name, sub_period)
         if existing_array is None:
-            holder._set(sub_period, array)
+            simulation.cache.put_in_cache(variable.name, sub_period, array)
         else:
             # The array of the current sub-period is reused for the next ones.
             # TODO: refactor or document this behavior
@@ -290,7 +243,7 @@ def set_input_dispatch_by_period(holder, period, array):
         sub_period = sub_period.offset(1)
 
 
-def set_input_divide_by_period(holder, period, array):
+def set_input_divide_by_period(simulation, variable, period, array):
     """
         This function can be declared as a ``set_input`` attribute of a variable.
 
@@ -303,9 +256,9 @@ def set_input_divide_by_period(holder, period, array):
     period_size = period.size
     period_unit = period.unit
 
-    if holder.variable.definition_period == MONTH:
+    if variable.definition_period == MONTH:
         cached_period_unit = periods.MONTH
-    elif holder.variable.definition_period == YEAR:
+    elif variable.definition_period == YEAR:
         cached_period_unit = periods.YEAR
     else:
         raise ValueError('set_input_divide_by_period can be used only for yearly or monthly variables.')
@@ -317,7 +270,7 @@ def set_input_divide_by_period(holder, period, array):
     sub_period = period.start.period(cached_period_unit)
     sub_periods_count = 0
     while sub_period.start < after_instant:
-        existing_array = holder.get_array(sub_period)
+        existing_array = simulation.get_array(variable.name, sub_period)
         if existing_array is not None:
             remaining_array -= existing_array
         else:
@@ -329,8 +282,8 @@ def set_input_divide_by_period(holder, period, array):
         divided_array = remaining_array / sub_periods_count
         sub_period = period.start.period(cached_period_unit)
         while sub_period.start < after_instant:
-            if holder.get_array(sub_period) is None:
-                holder._set(sub_period, divided_array)
+            if simulation.get_array(variable.name, sub_period) is None:
+                simulation.cache.put_in_cache(variable.name, sub_period, divided_array)
             sub_period = sub_period.offset(1)
     elif not (remaining_array == 0).all():
-        raise ValueError("Inconsistent input: variable {0} has already been set for all months contained in period {1}, and value {2} provided for {1} doesn't match the total ({3}). This error may also be thrown if you try to call set_input twice for the same variable and period.".format(holder.variable.name, period, array, array - remaining_array))
+        raise ValueError("Inconsistent input: variable {0} has already been set for all months contained in period {1}, and value {2} provided for {1} doesn't match the total ({3}). This error may also be thrown if you try to call set_input twice for the same variable and period.".format(variable.name, period, array, array - remaining_array))

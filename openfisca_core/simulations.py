@@ -10,6 +10,7 @@ from openfisca_core import periods
 from openfisca_core.commons import empty_clone
 from openfisca_core.tracers import Tracer, TracingParameterNodeAtInstant
 from openfisca_core.indexed_enums import Enum, EnumArray
+from openfisca_core.cache import Cache
 
 
 log = logging.getLogger(__name__)
@@ -68,6 +69,8 @@ class Simulation(object):
         self.memory_config = None
         self._data_storage_dir = None
 
+        self.cache = Cache()
+
     @property
     def trace(self):
         return self._trace
@@ -111,7 +114,6 @@ class Simulation(object):
             :returns: A numpy array containing the result of the calculation
         """
         population = self.get_variable_population(variable_name)
-        holder = population.get_holder(variable_name)
         variable = self.tax_benefit_system.get_variable(variable_name, check_existence = True)
 
         if period is not None and not isinstance(period, periods.Period):
@@ -123,7 +125,7 @@ class Simulation(object):
         self._check_period_consistency(period, variable)
 
         # First look for a value already cached
-        cached_array = holder.get_array(period)
+        cached_array = self.cache.get_cached_array(variable.name, period)
         if cached_array is not None:
             if self.trace:
                 self.tracer.record_calculation_end(variable.name, period, cached_array)
@@ -138,13 +140,13 @@ class Simulation(object):
 
             # If no result, use the default value and cache it
             if array is None:
-                array = holder.default_array()
+                array = variable.default_array(population.count)
 
             array = self._cast_formula_result(array, variable)
 
-            holder.put_in_cache(array, period)
+            self.cache.put_in_cache(variable.name, period, array)
         except SpiralError:
-            array = holder.default_array()
+            array = variable.default_array(population.count)
         finally:
             if self.trace:
                 self.tracer.record_calculation_end(variable.name, period, array)

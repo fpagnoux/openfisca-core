@@ -114,7 +114,7 @@ class Simulation(object):
             :returns: A numpy array containing the result of the calculation
         """
         population = self.get_variable_population(variable_name)
-        variable = self.tax_benefit_system.get_variable(variable_name, check_existence = True)
+        variable = self.get_variable(variable_name)
 
         if period is not None and not isinstance(period, periods.Period):
             period = periods.period(period)
@@ -125,7 +125,7 @@ class Simulation(object):
         self._check_period_consistency(period, variable)
 
         # First look for a value already cached
-        cached_array = self.cache.get_cached_array(variable.name, period)
+        cached_array = self.get_array(variable.name, period)
         if cached_array is not None:
             if self.trace:
                 self.tracer.record_calculation_end(variable.name, period, cached_array)
@@ -161,12 +161,10 @@ class Simulation(object):
         if self.computation_stack:
             return
         for (_name, _period) in self.invalidated_caches:
-            holder = self.get_holder(_name)
-            holder.delete_arrays(_period)
+            self.cache.delete_arrays(_name, periods.period(_period))
 
     def calculate_add(self, variable_name, period):
-        variable = self.tax_benefit_system.get_variable(variable_name, check_existence = True)
-
+        variable = self.get_variable(variable_name)
         if period is not None and not isinstance(period, periods.Period):
             period = periods.period(period)
 
@@ -189,7 +187,7 @@ class Simulation(object):
             )
 
     def calculate_divide(self, variable_name, period):
-        variable = self.tax_benefit_system.get_variable(variable_name, check_existence = True)
+        variable = self.get_variable(variable_name)
 
         if period is not None and not isinstance(period, periods.Period):
             period = periods.period(period)
@@ -218,7 +216,7 @@ class Simulation(object):
             Calculate the value of a variable using the ``calculate_output`` attribute of the variable.
         """
 
-        variable = self.tax_benefit_system.get_variable(variable_name, check_existence = True)
+        variable = self.get_variable(variable_name)
 
         if variable.calculate_output is None:
             return self.calculate(variable_name, period)
@@ -338,15 +336,11 @@ class Simulation(object):
 
             Unlike :any:`calculate`, this method *does not* trigger calculations and *does not* use any formula.
         """
-        if period is not None and not isinstance(period, periods.Period):
+        if period is None:
+            period = periods.period(periods.ETERNITY)
+        elif not isinstance(period, periods.Period):
             period = periods.period(period)
         return self.cache.get_cached_array(variable_name, period)
-
-    def get_holder(self, variable_name):
-        """
-            Get the :any:`Holder` associated with the variable ``variable_name`` for the simulation
-        """
-        return self.get_variable_population(variable_name).get_holder(variable_name)
 
     def get_memory_usage(self, variables = None):
         """
@@ -391,7 +385,7 @@ class Simulation(object):
             >>> simulation.get_array('age', '2018-05') is None
             True
         """
-        self.get_holder(variable).delete_arrays(period)
+        self.cache.delete_arrays(variable, period)
 
     def get_known_periods(self, variable):
         """
@@ -428,17 +422,21 @@ class Simulation(object):
 
             If a ``set_input`` property has been set for the variable, this method may accept inputs for periods not matching the ``definition_period`` of the variable. To read more about this, check the `documentation <https://openfisca.org/doc/coding-the-legislation/35_periods.html#automatically-process-variable-inputs-defined-for-periods-not-matching-the-definitionperiod>`_.
         """
-        variable = self.tax_benefit_system.get_variable(variable_name, check_existence = True)
+        variable = self.get_variable(variable_name)
         population = self.get_variable_population(variable_name)
-        period = periods.period(period)
+
+        if period is not None:
+            period = periods.period(period)
+        else:
+            period = periods.period(periods.ETERNITY)
         if variable.is_inactive(period):
             return
         array = variable.cast_to_array(value)
 
         if len(array) != population.count:
             raise ValueError(
-                'Unable to set value "{}" for variable "{}", as its length is {} while there are {} {} in the simulation.'
-                .format(value, self.variable.name, len(array), self.population.count, self.population.entity.plural))
+                f'Unable to set value "{value}" for variable "{variable.name}", as its length is {len(array)} while there are {population.count} {population.entity.plural} in the simulation.'
+                )
 
         if variable.set_input:
             return variable.set_input(self, variable, period, array)
@@ -447,7 +445,7 @@ class Simulation(object):
         self.cache.put_in_cache(variable.name, period, array)
 
     def get_variable_population(self, variable_name: str):
-        variable = self.tax_benefit_system.get_variable(variable_name, check_existence = True)
+        variable = self.get_variable(variable_name)
         return self.populations[variable.entity.key]
 
     def get_population(self, plural = None):
@@ -456,6 +454,9 @@ class Simulation(object):
     def get_entity(self, plural = None):
         population = self.get_population(plural)
         return population and population.entity
+
+    def get_variable(self, variable_name: str):
+        return self.tax_benefit_system.get_variable(variable_name, check_existence = True)
 
     def describe_entities(self):
         return {population.entity.plural: population.ids for population in self.populations.values()}

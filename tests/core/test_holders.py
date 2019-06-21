@@ -32,7 +32,7 @@ period = make_period('2017-12')
 def test_set_input_enum_string(couple):
     simulation = couple
     status_occupancy = np.asarray(['free_lodger'])
-    simulation.household.get_holder('housing_occupancy_status').set_input(period, status_occupancy)
+    simulation.set_input('housing_occupancy_status', period, status_occupancy)
     result = simulation.calculate('housing_occupancy_status', period)
     assert result == HousingOccupancyStatus.free_lodger
 
@@ -40,7 +40,7 @@ def test_set_input_enum_string(couple):
 def test_set_input_enum_int(couple):
     simulation = couple
     status_occupancy = np.asarray([2], dtype = np.int16)
-    simulation.household.get_holder('housing_occupancy_status').set_input(period, status_occupancy)
+    simulation.set_input('housing_occupancy_status', period, status_occupancy)
     result = simulation.calculate('housing_occupancy_status', period)
     assert result == HousingOccupancyStatus.free_lodger
 
@@ -48,7 +48,7 @@ def test_set_input_enum_int(couple):
 def test_set_input_enum_item(couple):
     simulation = couple
     status_occupancy = np.asarray([HousingOccupancyStatus.free_lodger])
-    simulation.household.get_holder('housing_occupancy_status').set_input(period, status_occupancy)
+    simulation.set_input('housing_occupancy_status', period, status_occupancy)
     result = simulation.calculate('housing_occupancy_status', period)
     assert result == HousingOccupancyStatus.free_lodger
 
@@ -74,36 +74,34 @@ def test_month_input_year_variable(couple):
 def test_enum_dtype(couple):
     simulation = couple
     status_occupancy = np.asarray([2], dtype = np.int16)
-    simulation.household.get_holder('housing_occupancy_status').set_input(period, status_occupancy)
+    simulation.set_input('housing_occupancy_status', period, status_occupancy)
     result = simulation.calculate('housing_occupancy_status', period)
     assert result.dtype.kind is not None
 
 
 def test_permanent_variable_empty(single):
     simulation = single
-    holder = simulation.person.get_holder('birth')
-    assert holder.get_array(None) is None
+    assert simulation.get_array('birth', None) is None
 
 
 def test_permanent_variable_filled(single):
     simulation = single
-    holder = simulation.person.get_holder('birth')
-    value = np.asarray(['1980-01-01'], dtype = holder.variable.dtype)
-    holder.set_input(make_period(ETERNITY), value)
-    assert holder.get_array(None) == value
-    assert holder.get_array(ETERNITY) == value
-    assert holder.get_array('2016-01') == value
+    variable = 'birth'
+    value = np.asarray(['1980-01-01'], dtype = simulation.get_variable(variable).dtype)
+    simulation.set_input(variable, make_period(ETERNITY), value)
+    assert simulation.get_array(variable, None) == value
+    assert simulation.get_array(variable, ETERNITY) == value
+    assert simulation.get_array(variable, '2016-01') == value
 
 
 def test_delete_arrays(single):
     simulation = single
-    salary_holder = simulation.person.get_holder('salary')
-    salary_holder.set_input(make_period(2017), np.asarray([30000]))
-    salary_holder.set_input(make_period(2018), np.asarray([60000]))
+    simulation.set_input(make_period(2017), np.asarray([30000]))
+    simulation.set_input(make_period(2018), np.asarray([60000]))
     assert simulation.person('salary', '2017-01') == 2500
     assert simulation.person('salary', '2018-01') == 5000
-    salary_holder.delete_arrays(period = 2018)
-    salary_holder.set_input(make_period(2018), np.asarray([15000]))
+    simulation.delete_arrays(period = 2018)
+    simulation.set_input(make_period(2018), np.asarray([15000]))
     assert simulation.person('salary', '2017-01') == 2500
     assert simulation.person('salary', '2018-01') == 1250
 

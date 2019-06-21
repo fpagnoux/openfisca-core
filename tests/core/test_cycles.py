@@ -133,7 +133,7 @@ def test_spiral_heuristic(simulation, reference_period):
 
 def test_spiral_cache(simulation, reference_period):
     simulation.calculate('variable7', period = reference_period)
-    cached_variable7 = simulation.get_holder('variable7').get_array(reference_period)
+    cached_variable7 = simulation.get_array('variable7', reference_period)
     assert cached_variable7 is not None
 
 

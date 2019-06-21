@@ -396,6 +396,7 @@ class SimulationBuilder(object):
     def finalize_variables_init(self, population):
         # Due to set_input mechanism, we must bufferize all inputs, then actually set them,
         # so that the months are set first and the years last.
+        simulation = population.simulation
         plural_key = population.entity.plural
         if plural_key in self.entity_counts:
             population.count = self.get_count(plural_key)
@@ -404,10 +405,9 @@ class SimulationBuilder(object):
             population.members_entity_id = np.array(self.get_memberships(plural_key))
             population.members_role = np.array(self.get_roles(plural_key))
         for variable_name in self.input_buffer.keys():
-            try:
-                holder = population.get_holder(variable_name)
-            except ValueError:  # Wrong entity, we can just ignore that
-                continue
+            variable = simulation.get_variable(variable_name)
+            if variable.entity.key != population.entity.key:
+                continue  # Wrong entity, we can just ignore that
             buffer = self.input_buffer[variable_name]
             periods = [period(period_str) for period_str in self.input_buffer[variable_name].keys()]
             # We need to handle small periods first for set_input to work
@@ -417,11 +417,7 @@ class SimulationBuilder(object):
                 # Hack to replicate the values in the persons entity
                 # when we have an axis along a group entity but not persons
                 array = np.tile(values, population.count // len(values))
-                variable = holder.variable
-                # TODO - this duplicates the check in Simulation.set_input, but
-                # fixing that requires improving Simulation's handling of entities
-                if (variable.end is None) or (period_value.start.date <= variable.end):
-                    holder.set_input(period_value, array)
+                simulation.set_input(variable_name, period_value, array)
 
     def raise_period_mismatch(self, entity, json, e):
         # This error happens when we try to set a variable value for a period that doesn't match its definition period

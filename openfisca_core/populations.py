@@ -8,7 +8,6 @@ import numpy as np
 
 from openfisca_core.entities import Role
 from openfisca_core.indexed_enums import EnumArray
-from openfisca_core.holders import Holder
 
 
 ADD = 'add'
@@ -18,7 +17,7 @@ DIVIDE = 'divide'
 def projectable(function):
     """
     Decorator to indicate that when called on a projector, the outcome of the function must be projected.
-    For instance person.household.sum(...) must be projected on person, while it would not make sense for person.household.get_holder.
+    For instance person.household.sum(...) must be projected on person, while it would not make sense for person.household.clone.
     """
     function.projectable = True
     return function
@@ -28,14 +27,12 @@ class Population(object):
     def __init__(self, entity):
         self.simulation = None
         self.entity = entity
-        self._holders = {}
         self.count = 0
         self.ids = []
 
     def clone(self, simulation):
         result = Population(self.entity)
         result.simulation = simulation
-        result._holders = {variable: holder.clone(result) for (variable, holder) in self._holders.items()}
         result.count = self.count
         result.ids = self.ids
         return result
@@ -101,31 +98,6 @@ See more information at <https://openfisca.org/doc/coding-the-legislation/35_per
             return self.simulation.calculate(variable_name, period)
 
     # Helpers
-
-    def get_holder(self, variable_name):
-        self.entity.check_variable_defined_for_entity(variable_name)
-        holder = self._holders.get(variable_name)
-        if holder:
-            return holder
-        variable = self.entity.get_variable(variable_name)
-        self._holders[variable_name] = holder = Holder(variable, self)
-        return holder
-
-    def get_memory_usage(self, variables = None):
-        holders_memory_usage = {
-            variable_name: holder.get_memory_usage()
-            for variable_name, holder in self._holders.items()
-            if variables is None or variable_name in variables
-            }
-
-        total_memory_usage = sum(
-            holder_memory_usage['total_nb_bytes'] for holder_memory_usage in holders_memory_usage.values()
-            )
-
-        return dict(
-            total_nb_bytes = total_memory_usage,
-            by_variable = holders_memory_usage
-            )
 
     @projectable
     def has_role(self, role):
@@ -217,7 +189,6 @@ class GroupPopulation(Population):
     def clone(self, simulation):
         result = GroupPopulation(self.entity, self.members)
         result.simulation = simulation
-        result._holders = {variable: holder.clone(self) for (variable, holder) in self._holders.items()}
         result.count = self.count
         result.ids = self.ids
         result._members_entity_id = self._members_entity_id

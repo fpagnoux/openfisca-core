@@ -3,6 +3,7 @@
 
 import tempfile
 import logging
+from typing import Optional, List, Dict
 
 import numpy as np
 
@@ -342,19 +343,11 @@ class Simulation(object):
             period = periods.period(period)
         return self.cache.get_cached_array(variable_name, period)
 
-    def get_memory_usage(self, variables = None):
+    def get_memory_usage(self, variables: Optional[List[str]] = None) -> Dict:
         """
             Get data about the virtual memory usage of the simulation
         """
-        result = dict(
-            total_nb_bytes = 0,
-            by_variable = {}
-            )
-        for entity in self.populations.values():
-            entity_memory_usage = entity.get_memory_usage(variables = variables)
-            result['total_nb_bytes'] += entity_memory_usage['total_nb_bytes']
-            result['by_variable'].update(entity_memory_usage['by_variable'])
-        return result
+        return self.cache.get_memory_usage(variables)
 
     # ----- Misc ----- #
 

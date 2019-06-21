@@ -22,5 +22,22 @@ class Cache:
     def delete_arrays(self, variable: str, period: Optional[Period] = None) -> None:
         self._storage_by_variable[variable].delete(period)
 
+    def get_memory_usage(self, variables: Optional[List[str]] = None):
+        usage_by_variable = {
+            variable: storage.get_memory_usage()
+            for variable, storage in self._storage_by_variable.items()
+            if variables is None or variable in variables
+        }
+
+        total_nb_bytes = sum(
+            variable_usage['total_nb_bytes']
+            for variable_usage in usage_by_variable.values()
+        )
+        return {
+            'by_variable': usage_by_variable,
+            'total_nb_bytes': total_nb_bytes,
+            }
+
+
     def get_known_periods(self, variable: str) -> List[Period]:
         pass

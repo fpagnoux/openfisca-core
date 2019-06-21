@@ -60,6 +60,8 @@ class InMemoryStorage(object):
         array = next(iter(self._arrays.values()))
         return dict(
             nb_arrays = nb_arrays,
+            nb_cells_by_array = len(array),
+            dtype = array.dtype,
             total_nb_bytes = array.nbytes * nb_arrays,
             cell_size = array.itemsize,
             )

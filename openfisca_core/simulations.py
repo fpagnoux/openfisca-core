@@ -425,10 +425,10 @@ class Simulation(object):
         variable = self.get_variable(variable_name)
         population = self.get_variable_population(variable_name)
 
+        if variable.definition_period == periods.ETERNITY:
+            period = periods.ETERNITY_PERIOD
         if period is not None:
             period = periods.period(period)
-        else:
-            period = periods.period(periods.ETERNITY)
         if variable.is_inactive(period):
             return
         array = variable.cast_to_array(value)

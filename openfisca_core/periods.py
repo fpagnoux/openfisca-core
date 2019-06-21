@@ -785,6 +785,9 @@ def instant_date(instant):
     return instant_date
 
 
+ETERNITY_PERIOD = Period(('eternity', instant(datetime.date.min), float("inf")))
+
+
 def period(value):
     """Return a new period, aka a triple (unit, start_instant, size).
 
@@ -839,7 +842,7 @@ def period(value):
         raise ValueError(message)
 
     if value == 'ETERNITY' or value == ETERNITY:
-        return Period(('eternity', instant(datetime.date.min), float("inf")))
+        return ETERNITY_PERIOD
 
     # check the type
     if isinstance(value, int):
